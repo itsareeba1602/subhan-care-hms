@@ -1,9 +1,17 @@
+import EmptyState from './EmptyState';
 import './Table.css';
 
 // columns: [{ key, header, render? }]
-function Table({ columns, data, emptyMessage = 'No records found' }) {
+// emptyMessage: shown as the EmptyState's descriptive sub-line (kept as the
+// prop name for backward compatibility with existing callers). Pass
+// emptyIcon/emptyTitle too for a fully designed empty state.
+function Table({ columns, data, emptyMessage = 'No records found', emptyIcon, emptyTitle }) {
   if (!data || data.length === 0) {
-    return <div className="table-empty">{emptyMessage}</div>;
+    return emptyTitle ? (
+      <EmptyState icon={emptyIcon} title={emptyTitle} message={emptyMessage} />
+    ) : (
+      <EmptyState icon={emptyIcon} title={emptyMessage} />
+    );
   }
 
   return (

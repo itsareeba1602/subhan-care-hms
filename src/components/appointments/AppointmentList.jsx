@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Plus, CalendarClock, XCircle, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Plus, CalendarClock, XCircle, CheckCircle2, ChevronLeft, ChevronRight, CalendarX2 } from 'lucide-react';
 import Input from '../shared/Input';
 import Button from '../shared/Button';
 import Badge from '../shared/Badge';
@@ -8,6 +8,7 @@ import Modal from '../shared/Modal';
 import Spinner from '../shared/Spinner';
 import BookAppointment from './BookAppointment';
 import { useAppointments } from '../../hooks/useAppointments';
+import { useToast } from '../../hooks/useToast';
 import { formatDate } from '../../utils/formatters';
 import './AppointmentList.css';
 
@@ -48,14 +49,10 @@ function AppointmentList() {
 
   const [modal, setModal] = useState(null);
   const [busy, setBusy] = useState(false);
-  const [toast, setToast] = useState('');
+  const { showToast } = useToast();
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const closeModal = () => setModal(null);
-  const showToast = (message) => {
-    setToast(message);
-    setTimeout(() => setToast(''), 2500);
-  };
 
   const handleBook = async (data) => {
     await bookAppointment(data);
@@ -75,16 +72,24 @@ function AppointmentList() {
       await cancelAppointment(modal.appointment.id);
       closeModal();
       showToast('Appointment cancelled.');
+    } catch (err) {
+      showToast(err.message || 'Failed to cancel appointment.', 'error');
     } finally {
       setBusy(false);
     }
   };
 
+  // This action isn't behind a form (single button click), so unlike
+  // book/reschedule it had no failure path at all before: if
+  // completeAppointment() threw, the promise rejection was silently
+  // swallowed and the button would just stop spinning with zero feedback.
   const handleComplete = async (appt) => {
     setBusy(true);
     try {
       await completeAppointment(appt.id);
       showToast('Appointment marked as completed.');
+    } catch (err) {
+      showToast(err.message || 'Failed to update appointment.', 'error');
     } finally {
       setBusy(false);
     }
@@ -170,14 +175,23 @@ function AppointmentList() {
         </Button>
       </div>
 
-      {toast && <div className="appointment-list-toast">{toast}</div>}
       {error && <p className="appointment-list-error">{error}</p>}
 
       {loading ? (
         <Spinner label="Loading appointments..." />
       ) : (
         <>
-          <Table columns={columns} data={appointments} emptyMessage="No appointments found." />
+          <Table
+            columns={columns}
+            data={appointments}
+            emptyIcon={CalendarX2}
+            emptyTitle={search || status || date ? 'No appointments match your filters' : 'No appointments yet'}
+            emptyMessage={
+              search || status || date
+                ? 'Try a different patient, doctor, status, or date.'
+                : 'Appointments you book will show up here.'
+            }
+          />
 
           {total > 0 && (
             <div className="appointment-list-pagination">

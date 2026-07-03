@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Plus, Eye, CheckCircle2, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
+import { Search, Plus, Eye, CheckCircle2, ChevronLeft, ChevronRight, AlertTriangle, Receipt } from 'lucide-react';
 import Input from '../shared/Input';
 import Button from '../shared/Button';
 import Badge from '../shared/Badge';
@@ -8,6 +8,7 @@ import Modal from '../shared/Modal';
 import Spinner from '../shared/Spinner';
 import GenerateInvoice from './GenerateInvoice';
 import { useBilling } from '../../hooks/useBilling';
+import { useToast } from '../../hooks/useToast';
 import { PAYMENT_METHODS } from '../../services/billingService';
 import { formatDate } from '../../utils/formatters';
 import './InvoiceList.css';
@@ -33,14 +34,10 @@ function InvoiceList() {
   const [modal, setModal] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[0]);
   const [busy, setBusy] = useState(false);
-  const [toast, setToast] = useState('');
+  const { showToast } = useToast();
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const closeModal = () => setModal(null);
-  const showToast = (message) => {
-    setToast(message);
-    setTimeout(() => setToast(''), 2500);
-  };
 
   const handleGenerate = async (data) => {
     await generateInvoice(data);
@@ -54,6 +51,8 @@ function InvoiceList() {
       await markInvoicePaid(modal.invoice.id, paymentMethod);
       closeModal();
       showToast('Invoice marked as paid.');
+    } catch (err) {
+      showToast(err.message || 'Failed to record payment.', 'error');
     } finally {
       setBusy(false);
     }
@@ -128,14 +127,23 @@ function InvoiceList() {
         </Button>
       </div>
 
-      {toast && <div className="invoice-list-toast">{toast}</div>}
       {error && <p className="invoice-list-error">{error}</p>}
 
       {loading ? (
         <Spinner label="Loading invoices..." />
       ) : (
         <>
-          <Table columns={columns} data={invoices} emptyMessage="No invoices found." />
+          <Table
+            columns={columns}
+            data={invoices}
+            emptyIcon={Receipt}
+            emptyTitle={search || status ? 'No invoices match your search' : 'No invoices yet'}
+            emptyMessage={
+              search || status
+                ? 'Try a different patient name, invoice ID, or status.'
+                : 'Invoices you generate will show up here.'
+            }
+          />
 
           {total > 0 && (
             <div className="invoice-list-pagination">

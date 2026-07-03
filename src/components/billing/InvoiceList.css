@@ -73,15 +73,6 @@
   color: var(--color-primary);
 }
 
-.invoice-list-toast {
-  padding: 10px 16px;
-  border-radius: var(--radius-input);
-  background: rgba(34, 197, 94, 0.1);
-  color: var(--color-secondary-hover);
-  font-size: 13px;
-  font-weight: 500;
-}
-
 .invoice-list-error {
   color: var(--color-danger);
   font-size: 13px;

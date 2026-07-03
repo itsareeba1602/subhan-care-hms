@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Plus, Eye, Pencil, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Plus, Eye, Pencil, Trash2, ChevronLeft, ChevronRight, Users } from 'lucide-react';
 import Input from '../shared/Input';
 import Button from '../shared/Button';
 import Badge from '../shared/Badge';
@@ -9,6 +9,7 @@ import Spinner from '../shared/Spinner';
 import AddPatientForm from './AddPatientForm';
 import PatientCard from './PatientCard';
 import { usePatients } from '../../hooks/usePatients';
+import { useToast } from '../../hooks/useToast';
 import { calculateAge } from '../../utils/formatters';
 import './PatientList.css';
 
@@ -32,17 +33,18 @@ function PatientList() {
 
   const [modal, setModal] = useState(null); // { type: 'add' | 'edit' | 'view' | 'delete', patient? }
   const [deleting, setDeleting] = useState(false);
-  const [toast, setToast] = useState('');
+  const { showToast } = useToast();
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   const closeModal = () => setModal(null);
 
-  const showToast = (message) => {
-    setToast(message);
-    setTimeout(() => setToast(''), 2500);
-  };
-
+  // No try/catch here: AddPatientForm already awaits onSubmit inside its own
+  // try/catch and renders the failure inline as `apiError`. If we swallowed
+  // the error here too, the form would never see the rejection, its
+  // submitting spinner would stop, and the modal would stay open with no
+  // visible reason why — silently confusing. Toast is for the success path;
+  // failures stay next to the field the user needs to fix.
   const handleAdd = async (data) => {
     await addPatient(data);
     closeModal();
@@ -61,6 +63,8 @@ function PatientList() {
       await deletePatient(modal.patient.id);
       closeModal();
       showToast('Patient deleted.');
+    } catch (err) {
+      showToast(err.message || 'Failed to delete patient.', 'error');
     } finally {
       setDeleting(false);
     }
@@ -139,15 +143,23 @@ function PatientList() {
         </Button>
       </div>
 
-      {toast && <div className="patient-list-toast">{toast}</div>}
-
       {error && <p className="patient-list-error">{error}</p>}
 
       {loading ? (
         <Spinner label="Loading patients..." />
       ) : (
         <>
-          <Table columns={columns} data={patients} emptyMessage="No patients found." />
+          <Table
+            columns={columns}
+            data={patients}
+            emptyIcon={Users}
+            emptyTitle={search || gender ? 'No patients match your search' : 'No patients yet'}
+            emptyMessage={
+              search || gender
+                ? 'Try a different name, CNIC, mobile number, or ID.'
+                : 'Patients you register will show up here.'
+            }
+          />
 
           {total > 0 && (
             <div className="patient-list-pagination">

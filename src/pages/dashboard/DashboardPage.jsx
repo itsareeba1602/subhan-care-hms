@@ -1,12 +1,11 @@
+import { Users, Stethoscope, CalendarCheck, Receipt } from 'lucide-react';
 import Card from '../../components/shared/Card';
+import Spinner from '../../components/shared/Spinner';
 import { useAuth } from '../../hooks/useAuth';
+import { useDashboardStats } from '../../hooks/useDashboardStats';
 import { ROLE_LABELS, hasModuleAccess } from '../../constants/roles';
 import './DashboardPage.css';
 
-// What each role is told on arrival. This isn't decorative — it's driven by
-// the same ROLE_MODULE_ACCESS table (SRS Section 9) that gates the sidebar,
-// so a role's dashboard message and its visible nav items can never
-// contradict each other.
 const ROLE_FOCUS = {
   admin: 'You have full access across Patients, Doctors, Appointments, and Billing.',
   doctor: 'You have limited (view-focused) access to Patients and read access to your schedule.',
@@ -18,10 +17,42 @@ const ROLE_FOCUS = {
 function DashboardPage() {
   const { user } = useAuth();
   const role = user?.role;
+  const { stats, loading, error } = useDashboardStats(role);
 
-  const accessibleModules = ['patients', 'doctors', 'appointments', 'billing'].filter((m) =>
-    hasModuleAccess(role, m)
-  );
+  const cards = [
+    {
+      key: 'patients',
+      icon: Users,
+      label: 'Total Patients',
+      value: stats?.patientsTotal,
+      show: hasModuleAccess(role, 'patients'),
+    },
+    {
+      key: 'doctors',
+      icon: Stethoscope,
+      label: 'Total Doctors',
+      value: stats?.doctorsTotal,
+      show: hasModuleAccess(role, 'doctors'),
+    },
+    {
+      key: 'appointments',
+      icon: CalendarCheck,
+      label: "Today's Appointments",
+      value: stats?.appointmentsToday,
+      show: hasModuleAccess(role, 'appointments'),
+    },
+    {
+      key: 'billing',
+      icon: Receipt,
+      label: 'Outstanding Invoices',
+      value: stats?.outstandingCount,
+      sublabel:
+        stats?.outstandingAmount != null
+          ? `Rs. ${stats.outstandingAmount.toLocaleString('en-PK')} pending`
+          : undefined,
+      show: hasModuleAccess(role, 'billing'),
+    },
+  ].filter((c) => c.show);
 
   return (
     <div>
@@ -29,17 +60,43 @@ function DashboardPage() {
       <p className="page-subtitle">
         Logged in as {ROLE_LABELS[role]}. {ROLE_FOCUS[role] || ''}
       </p>
-      <Card>
-        <p className="dashboard-summary-text">
-          Authentication module is complete — login, forgot password, OTP verification, and
-          password reset are all wired up with mock data.
-        </p>
-        {accessibleModules.length > 0 && (
-          <p className="dashboard-modules-text">
-            Modules available to your role: {accessibleModules.join(', ')}.
-          </p>
-        )}
-      </Card>
+
+      {loading && (
+        <Card>
+          <Spinner label="Loading your dashboard..." />
+        </Card>
+      )}
+
+      {!loading && error && (
+        <Card>
+          <p className="dashboard-error-text">{error}</p>
+        </Card>
+      )}
+
+      {!loading && !error && (
+        <div className="dashboard-stat-grid">
+          {cards.length === 0 ? (
+            <Card>
+              <p className="dashboard-summary-text">
+                No modules are assigned to your role yet. Contact an Admin if this looks wrong.
+              </p>
+            </Card>
+          ) : (
+            cards.map((c) => (
+              <Card key={c.key} className="dashboard-stat-card">
+                <div className="dashboard-stat-icon">
+                  <c.icon size={20} />
+                </div>
+                <div>
+                  <p className="dashboard-stat-value">{c.value ?? '—'}</p>
+                  <p className="dashboard-stat-label">{c.label}</p>
+                  {c.sublabel && <p className="dashboard-stat-sublabel">{c.sublabel}</p>}
+                </div>
+              </Card>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }

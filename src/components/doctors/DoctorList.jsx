@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Plus, Eye, Pencil, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Plus, Eye, Pencil, Trash2, ChevronLeft, ChevronRight, Stethoscope } from 'lucide-react';
 import Input from '../shared/Input';
 import Button from '../shared/Button';
 import Badge from '../shared/Badge';
@@ -9,6 +9,7 @@ import Spinner from '../shared/Spinner';
 import AddDoctorForm from './AddDoctorForm';
 import DoctorCard from './DoctorCard';
 import { useDoctors } from '../../hooks/useDoctors';
+import { useToast } from '../../hooks/useToast';
 import { SPECIALIZATIONS } from '../../services/doctorService';
 import { hasModuleAccess } from '../../constants/roles';
 import { useAuth } from '../../hooks/useAuth';
@@ -37,14 +38,10 @@ function DoctorList() {
 
   const [modal, setModal] = useState(null);
   const [deleting, setDeleting] = useState(false);
-  const [toast, setToast] = useState('');
+  const { showToast } = useToast();
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const closeModal = () => setModal(null);
-  const showToast = (message) => {
-    setToast(message);
-    setTimeout(() => setToast(''), 2500);
-  };
 
   const handleAdd = async (data) => {
     await addDoctor(data);
@@ -64,6 +61,8 @@ function DoctorList() {
       await deleteDoctor(modal.doctor.id);
       closeModal();
       showToast('Doctor removed.');
+    } catch (err) {
+      showToast(err.message || 'Failed to remove doctor.', 'error');
     } finally {
       setDeleting(false);
     }
@@ -143,14 +142,23 @@ function DoctorList() {
         )}
       </div>
 
-      {toast && <div className="doctor-list-toast">{toast}</div>}
       {error && <p className="doctor-list-error">{error}</p>}
 
       {loading ? (
         <Spinner label="Loading doctors..." />
       ) : (
         <>
-          <Table columns={columns} data={doctors} emptyMessage="No doctors found." />
+          <Table
+            columns={columns}
+            data={doctors}
+            emptyIcon={Stethoscope}
+            emptyTitle={search || specialization ? 'No doctors match your search' : 'No doctors yet'}
+            emptyMessage={
+              search || specialization
+                ? 'Try a different name, specialization, or ID.'
+                : 'Doctor profiles you add will show up here.'
+            }
+          />
 
           {total > 0 && (
             <div className="doctor-list-pagination">

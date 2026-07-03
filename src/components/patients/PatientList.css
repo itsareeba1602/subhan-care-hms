@@ -119,15 +119,6 @@
   line-height: 1.5;
 }
 
-.patient-list-toast {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-secondary-hover);
-  background: rgba(34, 197, 94, 0.1);
-  padding: 10px 14px;
-  border-radius: 8px;
-}
-
 @media (max-width: 640px) {
   .patient-list-toolbar {
     flex-direction: column;
