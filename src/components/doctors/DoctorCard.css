@@ -1,0 +1,79 @@
+.doctor-card-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.doctor-card-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.doctor-card-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--color-primary);
+  flex-shrink: 0;
+}
+
+.doctor-card-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0 0 4px;
+}
+
+.doctor-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.doctor-card-id {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.doctor-card-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.doctor-card-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.doctor-card-row-icon {
+  color: var(--color-text-muted);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.doctor-card-row-label {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  display: block;
+}
+
+.doctor-card-row-value {
+  font-size: 14px;
+  color: var(--color-text-primary);
+  margin: 2px 0 0;
+}
+
+@media (max-width: 480px) {
+  .doctor-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

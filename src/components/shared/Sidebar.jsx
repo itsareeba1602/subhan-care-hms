@@ -10,9 +10,9 @@ import './Sidebar.css';
 const NAV_ITEMS = [
   { to: ROUTES.DASHBOARD, label: 'Dashboard', icon: LayoutDashboard },
   { to: ROUTES.PATIENTS, label: 'Patients', icon: Users, moduleKey: 'patients' },
-  { to: ROUTES.DOCTORS, label: 'Doctors', icon: Stethoscope, moduleKey: 'doctors', comingSoon: true },
-  { to: ROUTES.APPOINTMENTS, label: 'Appointments', icon: CalendarCheck, moduleKey: 'appointments', comingSoon: true },
-  { to: ROUTES.BILLING, label: 'Billing', icon: Receipt, moduleKey: 'billing', comingSoon: true },
+  { to: ROUTES.DOCTORS, label: 'Doctors', icon: Stethoscope, moduleKey: 'doctors' },
+  { to: ROUTES.APPOINTMENTS, label: 'Appointments', icon: CalendarCheck, moduleKey: 'appointments' },
+  { to: ROUTES.BILLING, label: 'Billing', icon: Receipt, moduleKey: 'billing' },
 ];
 
 function Sidebar() {

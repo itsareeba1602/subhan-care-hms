@@ -9,6 +9,9 @@ import ResetPasswordPage from '../pages/auth/ResetPasswordPage';
 import DashboardLayout from '../layouts/DashboardLayout';
 import DashboardPage from '../pages/dashboard/DashboardPage';
 import PatientsPage from '../pages/patients/PatientsPage';
+import DoctorsPage from '../pages/doctors/DoctorsPage';
+import AppointmentsPage from '../pages/appointments/AppointmentsPage';
+import BillingPage from '../pages/billing/BillingPage';
 import NotFoundPage from '../pages/NotFoundPage';
 
 import ProtectedRoute from './ProtectedRoute';
@@ -33,7 +36,15 @@ function AppRoutes() {
           <Route element={<RoleRoute moduleKey="patients" />}>
             <Route path={ROUTES.PATIENTS} element={<PatientsPage />} />
           </Route>
-          {/* Doctors, Appointments, Billing routes get added here next */}
+          <Route element={<RoleRoute moduleKey="doctors" />}>
+            <Route path={ROUTES.DOCTORS} element={<DoctorsPage />} />
+          </Route>
+          <Route element={<RoleRoute moduleKey="appointments" />}>
+            <Route path={ROUTES.APPOINTMENTS} element={<AppointmentsPage />} />
+          </Route>
+          <Route element={<RoleRoute moduleKey="billing" />}>
+            <Route path={ROUTES.BILLING} element={<BillingPage />} />
+          </Route>
         </Route>
       </Route>
 

@@ -1,0 +1,98 @@
+.doctor-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.doctor-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.doctor-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.doctor-form-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.doctor-form-required {
+  color: var(--color-danger);
+  margin-left: 2px;
+}
+
+.doctor-form-select {
+  height: var(--input-height);
+  padding: 0 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-input);
+  font-size: 14px;
+  font-family: var(--font-family);
+  background: var(--color-white);
+  color: var(--color-text-primary);
+}
+
+.doctor-form-days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.doctor-form-day-chip {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1.5px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-family: var(--font-family);
+  cursor: pointer;
+}
+
+.doctor-form-day-chip-active {
+  border-color: var(--color-primary);
+  background: rgba(37, 99, 235, 0.08);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.doctor-form-error-text {
+  font-size: 12px;
+  color: var(--color-danger);
+}
+
+.doctor-form-api-error {
+  font-size: 13px;
+  color: var(--color-danger);
+  background: rgba(239, 68, 68, 0.06);
+  padding: 10px 12px;
+  border-radius: var(--radius-input);
+  margin: 0;
+}
+
+.doctor-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+@media (max-width: 480px) {
+  .doctor-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .doctor-form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .doctor-form-actions > * {
+    width: 100%;
+  }
+}
