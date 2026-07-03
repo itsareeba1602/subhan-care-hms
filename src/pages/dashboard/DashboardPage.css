@@ -1,0 +1,10 @@
+.dashboard-summary-text {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin-bottom: 10px;
+}
+
+.dashboard-modules-text {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}

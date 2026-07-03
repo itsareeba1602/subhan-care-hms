@@ -8,7 +8,7 @@ function ProtectedRoute() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="full-page-center">
         <Spinner label="Loading..." />
       </div>
     );

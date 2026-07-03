@@ -49,3 +49,26 @@ img {
   background: var(--color-primary);
   color: var(--color-white);
 }
+
+/* Shared page header — used by every top-level page (Dashboard, Patients,
+   and future Doctors/Appointments/Billing pages) instead of each page
+   repeating its own inline <h1>/<p> styles. Ties to Coding Standards:
+   "No Inline CSS" + "No Duplicate Code". */
+.page-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.page-subtitle {
+  color: var(--color-text-secondary);
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.full-page-center {
+  display: flex;
+  min-height: 100vh;
+  align-items: center;
+  justify-content: center;
+}
