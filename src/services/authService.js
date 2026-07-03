@@ -9,6 +9,8 @@ const MOCK_USERS = [
   { email: 'admin@subhancare.pk', password: 'Admin@123', role: ROLES.ADMIN, name: 'Admin User' },
   { email: 'doctor@subhancare.pk', password: 'Doctor@123', role: ROLES.DOCTOR, name: 'Dr. Ahmed Khan' },
   { email: 'reception@subhancare.pk', password: 'Front@123', role: ROLES.RECEPTIONIST, name: 'Sara Malik' },
+  { email: 'pharmacist@subhancare.pk', password: 'Pharma@123', role: ROLES.PHARMACIST, name: 'Bilal Yasir' },
+  { email: 'billing@subhancare.pk', password: 'Billing@123', role: ROLES.BILLING_STAFF, name: 'Noor ul Sehar' },
 ];
 
 const SESSION_KEY = 'subhan_care_session';

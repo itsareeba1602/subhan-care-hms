@@ -1,17 +1,26 @@
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Users, Stethoscope, CalendarCheck, Receipt, HeartPulse } from 'lucide-react';
 import { ROUTES } from '../../constants/routes';
+import { hasModuleAccess } from '../../constants/roles';
+import { useAuth } from '../../hooks/useAuth';
 import './Sidebar.css';
 
+// moduleKey ties each nav item to a row in ROLE_MODULE_ACCESS (SRS Section 9).
+// Items with no moduleKey (Dashboard) are visible to every authenticated role.
 const NAV_ITEMS = [
   { to: ROUTES.DASHBOARD, label: 'Dashboard', icon: LayoutDashboard },
-  { to: ROUTES.PATIENTS, label: 'Patients', icon: Users },
-  { to: ROUTES.DOCTORS, label: 'Doctors', icon: Stethoscope, comingSoon: true },
-  { to: ROUTES.APPOINTMENTS, label: 'Appointments', icon: CalendarCheck, comingSoon: true },
-  { to: ROUTES.BILLING, label: 'Billing', icon: Receipt, comingSoon: true },
+  { to: ROUTES.PATIENTS, label: 'Patients', icon: Users, moduleKey: 'patients' },
+  { to: ROUTES.DOCTORS, label: 'Doctors', icon: Stethoscope, moduleKey: 'doctors', comingSoon: true },
+  { to: ROUTES.APPOINTMENTS, label: 'Appointments', icon: CalendarCheck, moduleKey: 'appointments', comingSoon: true },
+  { to: ROUTES.BILLING, label: 'Billing', icon: Receipt, moduleKey: 'billing', comingSoon: true },
 ];
 
 function Sidebar() {
+  const { user } = useAuth();
+  const visibleItems = NAV_ITEMS.filter(
+    (item) => !item.moduleKey || hasModuleAccess(user?.role, item.moduleKey)
+  );
+
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
@@ -22,7 +31,7 @@ function Sidebar() {
       </div>
 
       <nav className="sidebar-nav">
-        {NAV_ITEMS.map((item) =>
+        {visibleItems.map((item) =>
           item.comingSoon ? (
             <span key={item.label} className="sidebar-link sidebar-link-disabled">
               <item.icon size={18} />
