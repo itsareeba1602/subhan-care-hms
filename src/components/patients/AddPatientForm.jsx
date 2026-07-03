@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { User, CreditCard, Phone } from 'lucide-react';
+import { User, CreditCard, Phone, UserCheck } from 'lucide-react';
 import Input from '../shared/Input';
 import Button from '../shared/Button';
 import { formatCNIC, formatPKMobile } from '../../utils/formatters';
@@ -16,6 +16,7 @@ const EMPTY_FORM = {
   dob: '',
   bloodGroup: '',
   address: '',
+  emergencyContact: '',
 };
 
 function AddPatientForm({ initialData, onSubmit, onCancel }) {
@@ -29,7 +30,7 @@ function AddPatientForm({ initialData, onSubmit, onCancel }) {
     const { name, value } = e.target;
     let nextValue = value;
     if (name === 'cnic') nextValue = formatCNIC(value);
-    if (name === 'mobile') nextValue = formatPKMobile(value);
+    if (name === 'mobile' || name === 'emergencyContact') nextValue = formatPKMobile(value);
 
     setForm((prev) => ({ ...prev, [name]: nextValue }));
     setErrors((prev) => ({ ...prev, [name]: '' }));
@@ -44,6 +45,9 @@ function AddPatientForm({ initialData, onSubmit, onCancel }) {
 
     if (!form.mobile) next.mobile = 'Mobile number is required.';
     else if (!isValidPKMobile(form.mobile)) next.mobile = 'Enter a valid Pakistani mobile (03XX-XXXXXXX).';
+
+    if (!form.emergencyContact) next.emergencyContact = 'Emergency contact is required.';
+    else if (!isValidPKMobile(form.emergencyContact)) next.emergencyContact = 'Enter a valid Pakistani mobile (03XX-XXXXXXX).';
 
     if (!form.dob) next.dob = 'Date of birth is required.';
     else if (new Date(form.dob) > new Date()) next.dob = 'Date of birth cannot be in the future.';
@@ -152,6 +156,17 @@ function AddPatientForm({ initialData, onSubmit, onCancel }) {
         />
         {errors.address && <span className="patient-form-error-text">{errors.address}</span>}
       </div>
+
+      <Input
+        label="Emergency Contact"
+        name="emergencyContact"
+        icon={UserCheck}
+        placeholder="0300-1234567"
+        value={form.emergencyContact}
+        onChange={handleChange}
+        error={errors.emergencyContact}
+        required
+      />
 
       {apiError && <p className="patient-form-api-error">{apiError}</p>}
 

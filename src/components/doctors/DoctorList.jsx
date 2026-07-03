@@ -60,9 +60,9 @@ function DoctorList() {
     try {
       await deleteDoctor(modal.doctor.id);
       closeModal();
-      showToast('Doctor removed.');
+      showToast('Doctor deactivated.');
     } catch (err) {
-      showToast(err.message || 'Failed to remove doctor.', 'error');
+      showToast(err.message || 'Failed to deactivate doctor.', 'error');
     } finally {
       setDeleting(false);
     }
@@ -84,11 +84,11 @@ function DoctorList() {
     {
       key: 'status',
       header: 'Status',
-      render: (d) => (
-        <Badge tone={d.status === 'active' ? 'secondary' : 'danger'}>
-          {d.status === 'active' ? 'Active' : 'On Leave'}
-        </Badge>
-      ),
+      render: (d) => {
+        const tone = d.status === 'active' ? 'secondary' : d.status === 'inactive' ? 'danger' : 'primary';
+        const label = d.status === 'active' ? 'Active' : d.status === 'inactive' ? 'Inactive' : 'On Leave';
+        return <Badge tone={tone}>{label}</Badge>;
+      },
     },
     {
       key: 'actions',
@@ -103,7 +103,7 @@ function DoctorList() {
               <button className="doctor-list-action-btn" onClick={() => setModal({ type: 'edit', doctor: d })} title="Edit">
                 <Pencil size={16} />
               </button>
-              <button className="doctor-list-action-btn doctor-list-action-danger" onClick={() => setModal({ type: 'delete', doctor: d })} title="Delete">
+              <button className="doctor-list-action-btn doctor-list-action-danger" onClick={() => setModal({ type: 'delete', doctor: d })} title="Deactivate">
                 <Trash2 size={16} />
               </button>
             </>
@@ -196,20 +196,20 @@ function DoctorList() {
       <Modal
         open={modal?.type === 'delete'}
         onClose={closeModal}
-        title="Remove Doctor"
+        title="Deactivate Doctor"
         footer={
           <>
             <Button variant="ghost" onClick={closeModal}>Cancel</Button>
             <Button variant="danger" loading={deleting} onClick={handleDelete}>
-              {deleting ? 'Removing...' : 'Remove'}
+              {deleting ? 'Deactivating...' : 'Deactivate'}
             </Button>
           </>
         }
       >
         {modal?.type === 'delete' && (
           <p className="doctor-list-delete-text">
-            Are you sure you want to remove <strong>{modal.doctor.fullName}</strong> ({modal.doctor.id})?
-            This action cannot be undone.
+            Are you sure you want to deactivate <strong>{modal.doctor.fullName}</strong> ({modal.doctor.id})?
+            This blocks new appointment bookings for them; their profile and history are kept.
           </p>
         )}
       </Modal>

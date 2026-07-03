@@ -1,4 +1,4 @@
-import { User, CreditCard, Phone, Cake, MapPin, Droplet, Calendar } from 'lucide-react';
+import { User, CreditCard, Phone, Cake, MapPin, Droplet, Calendar, UserCheck } from 'lucide-react';
 import Badge from '../shared/Badge';
 import { formatDate, calculateAge } from '../../utils/formatters';
 import './PatientCard.css';
@@ -12,6 +12,7 @@ function PatientCard({ patient }) {
     { icon: Cake, label: 'Date of Birth', value: `${formatDate(patient.dob)} (${calculateAge(patient.dob)} yrs)` },
     { icon: Droplet, label: 'Blood Group', value: patient.bloodGroup || 'Not specified' },
     { icon: MapPin, label: 'Address', value: patient.address },
+    { icon: UserCheck, label: 'Emergency Contact', value: patient.emergencyContact || 'Not specified' },
     { icon: Calendar, label: 'Registered On', value: formatDate(patient.registeredOn) },
   ];
 

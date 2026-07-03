@@ -24,8 +24,8 @@ function DoctorCard({ doctor }) {
           <div className="doctor-card-meta">
             <span className="doctor-card-id">{doctor.id}</span>
             <Badge tone="primary">{doctor.specialization}</Badge>
-            <Badge tone={doctor.status === 'active' ? 'secondary' : 'danger'}>
-              {doctor.status === 'active' ? 'Active' : 'On Leave'}
+            <Badge tone={doctor.status === 'active' ? 'secondary' : doctor.status === 'inactive' ? 'danger' : 'primary'}>
+              {doctor.status === 'active' ? 'Active' : doctor.status === 'inactive' ? 'Inactive' : 'On Leave'}
             </Badge>
           </div>
         </div>

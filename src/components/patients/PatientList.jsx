@@ -62,9 +62,9 @@ function PatientList() {
     try {
       await deletePatient(modal.patient.id);
       closeModal();
-      showToast('Patient deleted.');
+      showToast('Patient deactivated.');
     } catch (err) {
-      showToast(err.message || 'Failed to delete patient.', 'error');
+      showToast(err.message || 'Failed to deactivate patient.', 'error');
     } finally {
       setDeleting(false);
     }
@@ -108,7 +108,7 @@ function PatientList() {
           <button className="patient-list-action-btn" onClick={() => setModal({ type: 'edit', patient: p })} title="Edit">
             <Pencil size={16} />
           </button>
-          <button className="patient-list-action-btn patient-list-action-danger" onClick={() => setModal({ type: 'delete', patient: p })} title="Delete">
+          <button className="patient-list-action-btn patient-list-action-danger" onClick={() => setModal({ type: 'delete', patient: p })} title="Deactivate">
             <Trash2 size={16} />
           </button>
         </div>
@@ -207,24 +207,24 @@ function PatientList() {
         {modal?.type === 'view' && <PatientCard patient={modal.patient} />}
       </Modal>
 
-      {/* Delete Confirmation */}
+      {/* Deactivate Patient (soft-delete — FR-01.4) */}
       <Modal
         open={modal?.type === 'delete'}
         onClose={closeModal}
-        title="Delete Patient"
+        title="Deactivate Patient"
         footer={
           <>
             <Button variant="ghost" onClick={closeModal}>Cancel</Button>
             <Button variant="danger" loading={deleting} onClick={handleDelete}>
-              {deleting ? 'Deleting...' : 'Delete'}
+              {deleting ? 'Deactivating...' : 'Deactivate'}
             </Button>
           </>
         }
       >
         {modal?.type === 'delete' && (
           <p className="patient-list-delete-text">
-            Are you sure you want to delete <strong>{modal.patient.fullName}</strong> ({modal.patient.id})?
-            This action cannot be undone.
+            Are you sure you want to deactivate <strong>{modal.patient.fullName}</strong> ({modal.patient.id})?
+            Their record will be hidden from the active patient list, but the data is kept for audit purposes.
           </p>
         )}
       </Modal>

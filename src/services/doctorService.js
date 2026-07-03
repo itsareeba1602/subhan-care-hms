@@ -94,9 +94,16 @@ export async function updateDoctor(id, doctorData) {
   return doctors.find((d) => d.id === id);
 }
 
-export async function deleteDoctor(id) {
+// FR-02.3: deactivating a doctor must automatically block new appointment
+// bookings (getAllActiveDoctors already filters by status === 'active', so
+// setting status to 'inactive' here achieves that) while keeping the
+// profile and its history intact — never a hard delete.
+export async function deactivateDoctor(id) {
   await sleep(400);
-  doctors = doctors.filter((d) => d.id !== id);
+  doctors = doctors.map((d) => (d.id === id ? { ...d, status: 'inactive' } : d));
   persist(doctors);
   return { success: true };
 }
+
+// Alias so existing imports (`deleteDoctor`) keep working without a rename.
+export const deleteDoctor = deactivateDoctor;
