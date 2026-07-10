@@ -1,0 +1,143 @@
+.staff-list-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.staff-list-toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.staff-list-search {
+  flex: 1;
+  min-width: 200px;
+}
+
+.staff-list-filter {
+  height: var(--input-height);
+  padding: 0 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-input);
+  font-size: 14px;
+  font-family: var(--font-family);
+  background: var(--color-white);
+  color: var(--color-text-primary);
+}
+
+.staff-list-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.staff-list-id {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.staff-list-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.staff-list-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+
+.staff-list-action-btn:hover {
+  background: rgba(37, 99, 235, 0.06);
+  color: var(--color-primary);
+}
+
+.staff-list-action-danger:hover {
+  background: rgba(239, 68, 68, 0.06);
+  color: var(--color-danger);
+}
+
+.staff-list-error {
+  color: var(--color-danger);
+  font-size: 13px;
+}
+
+.staff-list-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.staff-list-pagination-info {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.staff-list-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.staff-list-page-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  cursor: pointer;
+}
+
+.staff-list-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.staff-list-page-current {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.staff-list-deactivate-text {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  .staff-list-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .staff-list-filter {
+    width: 100%;
+  }
+
+  .staff-list-pagination {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .staff-list-action-btn {
+    width: 28px;
+    height: 28px;
+  }
+}
