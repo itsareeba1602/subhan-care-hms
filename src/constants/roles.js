@@ -67,9 +67,28 @@ export const ROLE_MODULE_ACCESS = {
     [ROLES.PHARMACIST]: '—',
     [ROLES.BILLING_STAFF]: 'F',
   },
+  // SRS Section 9 Role-Permission Matrix: Staff Management is Full access
+  // for Admin only — every other role has none.
+  staff: {
+    [ROLES.ADMIN]: 'F',
+    [ROLES.DOCTOR]: '—',
+    [ROLES.RECEPTIONIST]: '—',
+    [ROLES.PHARMACIST]: '—',
+    [ROLES.BILLING_STAFF]: '—',
+  },
 };
 
 export function hasModuleAccess(role, moduleKey) {
   const level = ROLE_MODULE_ACCESS[moduleKey]?.[role];
   return level && level !== '—';
+}
+
+// Returns the raw access level ('F' | 'R' | 'L' | undefined) so components
+// can tell "can view this module" (hasModuleAccess) apart from "can actually
+// add/edit/deactivate records here" (level === 'F'). Needed because some
+// roles get read-only or limited access to a module they can still open —
+// e.g. Patients: Doctor = 'L', Pharmacist = 'R' — and the UI must not offer
+// write actions those roles aren't permitted to use.
+export function getModuleAccessLevel(role, moduleKey) {
+  return ROLE_MODULE_ACCESS[moduleKey]?.[role];
 }

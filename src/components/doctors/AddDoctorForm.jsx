@@ -1,20 +1,23 @@
 import { useState } from 'react';
-import { User, Mail, Phone } from 'lucide-react';
+import { User, Mail, Phone, BadgeCheck, Wallet } from 'lucide-react';
 import Input from '../shared/Input';
 import Button from '../shared/Button';
 import { formatPKMobile } from '../../utils/formatters';
 import { isValidEmail, isValidPKMobile } from '../../utils/helpers';
-import { SPECIALIZATIONS, WEEKDAYS } from '../../services/doctorService';
+import { SPECIALIZATIONS, WEEKDAYS, AVAILABILITY_HOURS } from '../../services/doctorService';
 import './AddDoctorForm.css';
 
 const EMPTY_FORM = {
   fullName: '',
   specialization: SPECIALIZATIONS[0],
   qualification: '',
+  licenseNumber: '',
+  consultationFee: '',
   mobile: '',
   email: '',
   experienceYears: '',
   availableDays: [],
+  availabilityHours: AVAILABILITY_HOURS[0],
   status: 'active',
 };
 
@@ -45,6 +48,10 @@ function AddDoctorForm({ initialData, onSubmit, onCancel }) {
     const next = {};
     if (!form.fullName.trim()) next.fullName = 'Full name is required.';
     if (!form.qualification.trim()) next.qualification = 'Qualification is required.';
+    if (!form.licenseNumber.trim()) next.licenseNumber = 'License number is required.';
+
+    if (!form.consultationFee && form.consultationFee !== 0) next.consultationFee = 'Consultation fee is required.';
+    else if (Number(form.consultationFee) <= 0) next.consultationFee = 'Enter a valid fee amount.';
 
     if (!form.email) next.email = 'Email is required.';
     else if (!isValidEmail(form.email)) next.email = 'Enter a valid email address.';
@@ -67,7 +74,7 @@ function AddDoctorForm({ initialData, onSubmit, onCancel }) {
 
     setLoading(true);
     try {
-      await onSubmit({ ...form, experienceYears: Number(form.experienceYears) });
+      await onSubmit({ ...form, experienceYears: Number(form.experienceYears), consultationFee: Number(form.consultationFee) });
     } catch (err) {
       setApiError(err.message || 'Something went wrong. Please try again.');
     } finally {
@@ -106,6 +113,31 @@ function AddDoctorForm({ initialData, onSubmit, onCancel }) {
           value={form.qualification}
           onChange={handleChange}
           error={errors.qualification}
+          required
+        />
+      </div>
+
+      <div className="doctor-form-row">
+        <Input
+          label="License Number"
+          name="licenseNumber"
+          icon={BadgeCheck}
+          placeholder="e.g. PMDC-11234"
+          value={form.licenseNumber}
+          onChange={handleChange}
+          error={errors.licenseNumber}
+          required
+        />
+        <Input
+          label="Consultation Fee (Rs.)"
+          name="consultationFee"
+          type="number"
+          min="0"
+          icon={Wallet}
+          placeholder="e.g. 2000"
+          value={form.consultationFee}
+          onChange={handleChange}
+          error={errors.consultationFee}
           required
         />
       </div>
@@ -171,6 +203,17 @@ function AddDoctorForm({ initialData, onSubmit, onCancel }) {
           ))}
         </div>
         {errors.availableDays && <span className="doctor-form-error-text">{errors.availableDays}</span>}
+      </div>
+
+      <div className="doctor-form-field">
+        <label className="doctor-form-label">
+          Time Slot <span className="doctor-form-required">*</span>
+        </label>
+        <select name="availabilityHours" value={form.availabilityHours} onChange={handleChange} className="doctor-form-select">
+          {AVAILABILITY_HOURS.map((slot) => (
+            <option key={slot} value={slot}>{slot}</option>
+          ))}
+        </select>
       </div>
 
       {apiError && <p className="doctor-form-api-error">{apiError}</p>}

@@ -12,6 +12,7 @@ import PatientsPage from '../pages/patients/PatientsPage';
 import DoctorsPage from '../pages/doctors/DoctorsPage';
 import AppointmentsPage from '../pages/appointments/AppointmentsPage';
 import BillingPage from '../pages/billing/BillingPage';
+import StaffPage from '../pages/staff/StaffPage';
 import NotFoundPage from '../pages/NotFoundPage';
 
 import ProtectedRoute from './ProtectedRoute';
@@ -44,6 +45,9 @@ function AppRoutes() {
           </Route>
           <Route element={<RoleRoute moduleKey="billing" />}>
             <Route path={ROUTES.BILLING} element={<BillingPage />} />
+          </Route>
+          <Route element={<RoleRoute moduleKey="staff" />}>
+            <Route path={ROUTES.STAFF} element={<StaffPage />} />
           </Route>
         </Route>
       </Route>

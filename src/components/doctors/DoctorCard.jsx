@@ -1,5 +1,6 @@
-import { Stethoscope, Mail, Phone, GraduationCap, CalendarDays, BadgeCheck } from 'lucide-react';
+import { Stethoscope, Mail, Phone, GraduationCap, CalendarDays, Clock, BadgeCheck, Wallet } from 'lucide-react';
 import Badge from '../shared/Badge';
+import { formatCurrency } from '../../utils/formatters';
 import './DoctorCard.css';
 
 function DoctorCard({ doctor }) {
@@ -7,10 +8,13 @@ function DoctorCard({ doctor }) {
 
   const rows = [
     { icon: GraduationCap, label: 'Qualification', value: doctor.qualification },
+    { icon: BadgeCheck, label: 'License Number', value: doctor.licenseNumber },
+    { icon: Wallet, label: 'Consultation Fee', value: formatCurrency(doctor.consultationFee) },
     { icon: Mail, label: 'Email', value: doctor.email },
     { icon: Phone, label: 'Mobile', value: doctor.mobile },
     { icon: BadgeCheck, label: 'Experience', value: `${doctor.experienceYears} years` },
     { icon: CalendarDays, label: 'Available Days', value: doctor.availableDays.join(', ') },
+    { icon: Clock, label: 'Time Slot', value: doctor.availabilityHours },
   ];
 
   return (

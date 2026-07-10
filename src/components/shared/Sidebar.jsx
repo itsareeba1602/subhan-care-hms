@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, Stethoscope, CalendarCheck, Receipt, HeartPulse } from 'lucide-react';
+import { LayoutDashboard, Users, Stethoscope, CalendarCheck, Receipt, HeartPulse, UserCog } from 'lucide-react';
 import { ROUTES } from '../../constants/routes';
 import { hasModuleAccess } from '../../constants/roles';
 import { useAuth } from '../../hooks/useAuth';
@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { to: ROUTES.DOCTORS, label: 'Doctors', icon: Stethoscope, moduleKey: 'doctors' },
   { to: ROUTES.APPOINTMENTS, label: 'Appointments', icon: CalendarCheck, moduleKey: 'appointments' },
   { to: ROUTES.BILLING, label: 'Billing', icon: Receipt, moduleKey: 'billing' },
+  { to: ROUTES.STAFF, label: 'Staff', icon: UserCog, moduleKey: 'staff' },
 ];
 
 function Sidebar() {

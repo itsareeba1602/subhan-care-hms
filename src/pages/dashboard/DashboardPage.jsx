@@ -1,8 +1,10 @@
 import { Users, Stethoscope, CalendarCheck, Receipt } from 'lucide-react';
 import Card from '../../components/shared/Card';
 import Spinner from '../../components/shared/Spinner';
+import DoctorScheduleWidget from '../../components/dashboard/DoctorScheduleWidget';
 import { useAuth } from '../../hooks/useAuth';
 import { useDashboardStats } from '../../hooks/useDashboardStats';
+import { useDoctorSchedule } from '../../hooks/useDoctorSchedule';
 import { ROLE_LABELS, hasModuleAccess } from '../../constants/roles';
 import './DashboardPage.css';
 
@@ -18,6 +20,12 @@ function DashboardPage() {
   const { user } = useAuth();
   const role = user?.role;
   const { stats, loading, error } = useDashboardStats(role);
+  const isDoctor = role === 'doctor';
+  const {
+    appointments: myAppointments,
+    loading: scheduleLoading,
+    error: scheduleError,
+  } = useDoctorSchedule(isDoctor ? user?.name : null);
 
   const cards = [
     {
@@ -96,6 +104,10 @@ function DashboardPage() {
             ))
           )}
         </div>
+      )}
+
+      {isDoctor && (
+        <DoctorScheduleWidget appointments={myAppointments} loading={scheduleLoading} error={scheduleError} />
       )}
     </div>
   );

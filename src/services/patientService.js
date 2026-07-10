@@ -28,9 +28,26 @@ const SEED_PATIENTS = [
 
 function loadPatients() {
   const raw = localStorage.getItem(STORAGE_KEY);
-  if (raw) return JSON.parse(raw);
+  if (raw) {
+    const cached = JSON.parse(raw);
+    // Self-healing migration: emergencyContact/status were added to this
+    // schema after some browsers had already cached patient data under
+    // STORAGE_KEY. Since seeding only runs when localStorage is completely
+    // empty, those browsers would otherwise show these fields as blank
+    // forever. Backfill defaults for anything missing — p's own values
+    // (spread last) always win when present — so a schema change never
+    // requires the user to manually clear localStorage.
+    const migrated = cached.map((p) => ({
+      emergencyContact: '',
+      status: 'active',
+      ...p,
+    }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+    return migrated;
+  }
   const seeded = SEED_PATIENTS.map((p, i) => ({
-    id: `PT-${String(i + 1).padStart(4, '0')}`,
+    // FR-01.2: unique Patient ID, format SC-PAT-##### (5-digit, zero-padded).
+    id: `SC-PAT-${String(i + 1).padStart(5, '0')}`,
     registeredOn: new Date(Date.now() - i * 86400000).toISOString(),
     // FR-01.4: patients are soft-deleted (status flips to 'inactive'), never
     // hard-removed, so historical records stay intact for audit purposes.
@@ -48,9 +65,9 @@ function persist(patients) {
 let patients = loadPatients();
 
 function nextId() {
-  const nums = patients.map((p) => parseInt(p.id.split('-')[1], 10));
+  const nums = patients.map((p) => parseInt(p.id.split('-')[2], 10));
   const max = nums.length ? Math.max(...nums) : 0;
-  return `PT-${String(max + 1).padStart(4, '0')}`;
+  return `SC-PAT-${String(max + 1).padStart(5, '0')}`;
 }
 
 export async function getPatients({ search = '', gender = '', page = 1, pageSize = 8, includeInactive = false } = {}) {

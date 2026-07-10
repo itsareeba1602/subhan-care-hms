@@ -15,6 +15,10 @@ const MOCK_USERS = [
 
 const SESSION_KEY = 'subhan_care_session';
 const ATTEMPTS_KEY = 'subhan_care_login_attempts';
+// FR-03.4 (Staff Management): tracks emails whose sessions were force-revoked
+// by an Admin deactivation, so an already-open tab can be signed out without
+// waiting for the idle timeout.
+const REVOKED_KEY = 'subhan_care_revoked_sessions';
 
 // SR-11: password reset tokens (OTP) expire after 15 minutes.
 const OTP_TTL_MS = 15 * 60 * 1000;
@@ -155,4 +159,32 @@ export function getSession() {
 export function logout() {
   localStorage.removeItem(SESSION_KEY);
   sessionStorage.removeItem(SESSION_KEY);
+}
+
+function readRevoked() {
+  try {
+    return JSON.parse(localStorage.getItem(REVOKED_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+// FR-03.4: called by staffService when an Admin deactivates a staff account.
+// Kills the session immediately if it's active in this tab, and records the
+// email so AuthContext's poll (other tabs) can sign it out too — a status
+// flag alone would only take effect the next time that user tried to log in.
+export function revokeSessionsForEmail(email) {
+  const revoked = readRevoked();
+  if (!revoked.includes(email)) {
+    revoked.push(email);
+    localStorage.setItem(REVOKED_KEY, JSON.stringify(revoked));
+  }
+  const current = getSession();
+  if (current?.email === email) {
+    logout();
+  }
+}
+
+export function isSessionRevoked(email) {
+  return readRevoked().includes(email);
 }

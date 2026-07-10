@@ -11,6 +11,7 @@ export const ROUTES = {
   DOCTORS: '/doctors',
   APPOINTMENTS: '/appointments',
   BILLING: '/billing',
+  STAFF: '/staff',
 
   ROOT: '/',
 };

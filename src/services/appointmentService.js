@@ -91,6 +91,25 @@ export async function getBookingOptions() {
   return { patients, doctors };
 }
 
+// FR-02.4: a doctor's own upcoming appointments, for their personal
+// dashboard widget. Matches by doctorName (appointments only store the
+// doctor's name, same as the booking form) and excludes cancelled/past
+// visits so the widget only ever shows what's actually still ahead.
+export async function getUpcomingAppointmentsForDoctor(doctorName, limit = 5) {
+  await sleep(300);
+  if (!doctorName) return [];
+  const today = new Date().toISOString().slice(0, 10);
+  return appointments
+    .filter(
+      (a) =>
+        a.doctorName === doctorName &&
+        a.date >= today &&
+        (a.status === APPOINTMENT_STATUS.SCHEDULED || a.status === APPOINTMENT_STATUS.RESCHEDULED)
+    )
+    .sort((a, b) => (a.date + a.timeSlot).localeCompare(b.date + b.timeSlot))
+    .slice(0, limit);
+}
+
 // Prevents double-booking the same doctor at the same date + time slot.
 function isSlotTaken(doctorName, date, timeSlot, excludeId) {
   return appointments.some(

@@ -10,10 +10,19 @@ import AddPatientForm from './AddPatientForm';
 import PatientCard from './PatientCard';
 import { usePatients } from '../../hooks/usePatients';
 import { useToast } from '../../hooks/useToast';
+import { useAuth } from '../../hooks/useAuth';
+import { getModuleAccessLevel } from '../../constants/roles';
 import { calculateAge } from '../../utils/formatters';
 import './PatientList.css';
 
 function PatientList() {
+  const { user } = useAuth();
+  // SRS Section 9: Patients access level varies by role — Admin/Receptionist
+  // are 'F' (full), Doctor is 'L' (limited/own patients), Pharmacist is 'R'
+  // (read-only). Only 'F' may add, edit, or deactivate; everyone who can
+  // reach this page at all (RoleRoute already blocks '—') can still view.
+  const canEdit = getModuleAccessLevel(user?.role, 'patients') === 'F';
+
   const {
     patients,
     total,
@@ -105,12 +114,16 @@ function PatientList() {
           <button className="patient-list-action-btn" onClick={() => setModal({ type: 'view', patient: p })} title="View details">
             <Eye size={16} />
           </button>
-          <button className="patient-list-action-btn" onClick={() => setModal({ type: 'edit', patient: p })} title="Edit">
-            <Pencil size={16} />
-          </button>
-          <button className="patient-list-action-btn patient-list-action-danger" onClick={() => setModal({ type: 'delete', patient: p })} title="Deactivate">
-            <Trash2 size={16} />
-          </button>
+          {canEdit && (
+            <>
+              <button className="patient-list-action-btn" onClick={() => setModal({ type: 'edit', patient: p })} title="Edit">
+                <Pencil size={16} />
+              </button>
+              <button className="patient-list-action-btn patient-list-action-danger" onClick={() => setModal({ type: 'delete', patient: p })} title="Deactivate">
+                <Trash2 size={16} />
+              </button>
+            </>
+          )}
         </div>
       ),
     },
@@ -138,9 +151,11 @@ function PatientList() {
           <option value="female">Female</option>
           <option value="other">Other</option>
         </select>
-        <Button onClick={() => setModal({ type: 'add' })}>
-          <Plus size={18} /> Add Patient
-        </Button>
+        {canEdit && (
+          <Button onClick={() => setModal({ type: 'add' })}>
+            <Plus size={18} /> Add Patient
+          </Button>
+        )}
       </div>
 
       {error && <p className="patient-list-error">{error}</p>}

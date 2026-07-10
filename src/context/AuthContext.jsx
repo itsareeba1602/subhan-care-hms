@@ -52,6 +52,20 @@ export function AuthProvider({ children }) {
     };
   }, [user, resetIdleTimer]);
 
+  // FR-03.4 (Staff Management): if an Admin deactivates this account from
+  // another tab/device, sign this tab out on the next poll instead of
+  // leaving the deactivated session usable until it happens to expire.
+  useEffect(() => {
+    if (!user) return;
+    const interval = setInterval(() => {
+      if (authService.isSessionRevoked(user.email)) {
+        setSessionExpired(true);
+        logout();
+      }
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [user, logout]);
+
   return (
     <AuthContext.Provider
       value={{ user, loading, login, logout, isAuthenticated: !!user, sessionExpired, clearSessionExpired: () => setSessionExpired(false) }}

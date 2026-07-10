@@ -13,6 +13,7 @@ import { useToast } from '../../hooks/useToast';
 import { SPECIALIZATIONS } from '../../services/doctorService';
 import { hasModuleAccess } from '../../constants/roles';
 import { useAuth } from '../../hooks/useAuth';
+import { formatCurrency } from '../../utils/formatters';
 import './DoctorList.css';
 
 function DoctorList() {
@@ -81,6 +82,11 @@ function DoctorList() {
     },
     { key: 'specialization', header: 'Specialization' },
     { key: 'mobile', header: 'Mobile' },
+    {
+      key: 'consultationFee',
+      header: 'Fee',
+      render: (d) => formatCurrency(d.consultationFee),
+    },
     {
       key: 'status',
       header: 'Status',

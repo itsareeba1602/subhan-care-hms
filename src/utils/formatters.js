@@ -31,3 +31,8 @@ export function calculateAge(dob) {
   }
   return age;
 }
+
+export function formatCurrency(amount) {
+  if (amount == null || Number.isNaN(Number(amount))) return '';
+  return `Rs. ${Number(amount).toLocaleString('en-PK')}`;
+}
