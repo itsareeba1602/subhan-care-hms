@@ -11,6 +11,7 @@ import DashboardPage from '../pages/dashboard/DashboardPage';
 import PatientsPage from '../pages/patients/PatientsPage';
 import DoctorsPage from '../pages/doctors/DoctorsPage';
 import AppointmentsPage from '../pages/appointments/AppointmentsPage';
+import MedicalHistoryPage from '../pages/medical-history/MedicalHistoryPage';
 import BillingPage from '../pages/billing/BillingPage';
 import StaffPage from '../pages/staff/StaffPage';
 import NotFoundPage from '../pages/NotFoundPage';
@@ -42,6 +43,9 @@ function AppRoutes() {
           </Route>
           <Route element={<RoleRoute moduleKey="appointments" />}>
             <Route path={ROUTES.APPOINTMENTS} element={<AppointmentsPage />} />
+          </Route>
+          <Route element={<RoleRoute moduleKey="medicalHistory" />}>
+            <Route path={ROUTES.MEDICAL_HISTORY} element={<MedicalHistoryPage />} />
           </Route>
           <Route element={<RoleRoute moduleKey="billing" />}>
             <Route path={ROUTES.BILLING} element={<BillingPage />} />

@@ -44,7 +44,10 @@ export const ROLE_MODULE_ACCESS = {
     [ROLES.DOCTOR]: 'L',
     [ROLES.RECEPTIONIST]: 'F',
     [ROLES.PHARMACIST]: 'R',
-    [ROLES.BILLING_STAFF]: '—',
+    // SRS Section 9 Table 5 lists Billing Staff as 'R' for Patient Records
+    // (they need read access to look up a patient while generating an
+    // invoice) — previously '—' here, which was a gap against the matrix.
+    [ROLES.BILLING_STAFF]: 'R',
   },
   doctors: {
     [ROLES.ADMIN]: 'F',
@@ -72,6 +75,17 @@ export const ROLE_MODULE_ACCESS = {
   staff: {
     [ROLES.ADMIN]: 'F',
     [ROLES.DOCTOR]: '—',
+    [ROLES.RECEPTIONIST]: '—',
+    [ROLES.PHARMACIST]: '—',
+    [ROLES.BILLING_STAFF]: '—',
+  },
+  // SRS Section 9: Medical History is Admin = R (read-only oversight),
+  // Doctor = F (full, but scoped in the UI/service layer to their own
+  // patients only — see consultationService.getPatientsWithHistoryForDoctor).
+  // No other role has any access to clinical history.
+  medicalHistory: {
+    [ROLES.ADMIN]: 'R',
+    [ROLES.DOCTOR]: 'F',
     [ROLES.RECEPTIONIST]: '—',
     [ROLES.PHARMACIST]: '—',
     [ROLES.BILLING_STAFF]: '—',

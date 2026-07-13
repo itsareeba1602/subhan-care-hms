@@ -10,6 +10,7 @@ export const ROUTES = {
   PATIENTS: '/patients',
   DOCTORS: '/doctors',
   APPOINTMENTS: '/appointments',
+  MEDICAL_HISTORY: '/medical-history',
   BILLING: '/billing',
   STAFF: '/staff',
 

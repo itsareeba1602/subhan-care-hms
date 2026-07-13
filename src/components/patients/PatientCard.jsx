@@ -1,9 +1,10 @@
-import { User, CreditCard, Phone, Cake, MapPin, Droplet, Calendar, UserCheck } from 'lucide-react';
+import { User, CreditCard, Phone, Cake, MapPin, Droplet, Calendar, UserCheck, FileClock } from 'lucide-react';
 import Badge from '../shared/Badge';
+import Button from '../shared/Button';
 import { formatDate, calculateAge } from '../../utils/formatters';
 import './PatientCard.css';
 
-function PatientCard({ patient }) {
+function PatientCard({ patient, onViewHistory }) {
   if (!patient) return null;
 
   const rows = [
@@ -44,6 +45,12 @@ function PatientCard({ patient }) {
           </div>
         ))}
       </div>
+
+      {onViewHistory && (
+        <Button variant="outline" fullWidth onClick={() => onViewHistory(patient)}>
+          <FileClock size={16} /> View Medical History
+        </Button>
+      )}
     </div>
   );
 }

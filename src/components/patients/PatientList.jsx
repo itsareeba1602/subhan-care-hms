@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Eye, Pencil, Trash2, ChevronLeft, ChevronRight, Users } from 'lucide-react';
 import Input from '../shared/Input';
 import Button from '../shared/Button';
@@ -11,17 +12,23 @@ import PatientCard from './PatientCard';
 import { usePatients } from '../../hooks/usePatients';
 import { useToast } from '../../hooks/useToast';
 import { useAuth } from '../../hooks/useAuth';
-import { getModuleAccessLevel } from '../../constants/roles';
+import { getModuleAccessLevel, hasModuleAccess } from '../../constants/roles';
 import { calculateAge } from '../../utils/formatters';
+import { ROUTES } from '../../constants/routes';
 import './PatientList.css';
 
 function PatientList() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   // SRS Section 9: Patients access level varies by role — Admin/Receptionist
   // are 'F' (full), Doctor is 'L' (limited/own patients), Pharmacist is 'R'
   // (read-only). Only 'F' may add, edit, or deactivate; everyone who can
   // reach this page at all (RoleRoute already blocks '—') can still view.
   const canEdit = getModuleAccessLevel(user?.role, 'patients') === 'F';
+  // Medical History is Admin (R) and Doctor (F, own patients) only per the
+  // Section 9 matrix — Receptionist, Pharmacist, and Billing Staff don't
+  // get the button even though they can view the patient card itself.
+  const canViewHistory = hasModuleAccess(user?.role, 'medicalHistory');
 
   const {
     patients,
@@ -219,7 +226,16 @@ function PatientList() {
 
       {/* View Details */}
       <Modal open={modal?.type === 'view'} onClose={closeModal} title="Patient Details">
-        {modal?.type === 'view' && <PatientCard patient={modal.patient} />}
+        {modal?.type === 'view' && (
+          <PatientCard
+            patient={modal.patient}
+            onViewHistory={
+              canViewHistory
+                ? (patient) => navigate(ROUTES.MEDICAL_HISTORY, { state: { patientName: patient.fullName } })
+                : null
+            }
+          />
+        )}
       </Modal>
 
       {/* Deactivate Patient (soft-delete — FR-01.4) */}

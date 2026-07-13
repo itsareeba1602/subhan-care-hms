@@ -36,3 +36,14 @@ export function formatCurrency(amount) {
   if (amount == null || Number.isNaN(Number(amount))) return '';
   return `Rs. ${Number(amount).toLocaleString('en-PK')}`;
 }
+
+export function formatDateTime(date) {
+  if (!date) return '';
+  return new Date(date).toLocaleString('en-PK', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}

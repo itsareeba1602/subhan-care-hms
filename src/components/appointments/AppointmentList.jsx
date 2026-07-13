@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Plus, CalendarClock, XCircle, CheckCircle2, ChevronLeft, ChevronRight, CalendarX2 } from 'lucide-react';
+import { Search, Plus, CalendarClock, XCircle, CheckCircle2, ChevronLeft, ChevronRight, CalendarX2, Stethoscope } from 'lucide-react';
 import Input from '../shared/Input';
 import Button from '../shared/Button';
 import Badge from '../shared/Badge';
@@ -7,8 +7,10 @@ import Table from '../shared/Table';
 import Modal from '../shared/Modal';
 import Spinner from '../shared/Spinner';
 import BookAppointment from './BookAppointment';
+import ConsultationPanel from '../consultations/ConsultationPanel';
 import { useAppointments } from '../../hooks/useAppointments';
 import { useToast } from '../../hooks/useToast';
+import { useAuth } from '../../hooks/useAuth';
 import { formatDate } from '../../utils/formatters';
 import './AppointmentList.css';
 
@@ -27,6 +29,9 @@ const STATUS_LABEL = {
 };
 
 function AppointmentList() {
+  const { user } = useAuth();
+  const isDoctor = user?.role === 'doctor';
+
   const {
     appointments,
     total,
@@ -45,6 +50,7 @@ function AppointmentList() {
     rescheduleAppointment,
     cancelAppointment,
     completeAppointment,
+    refetch,
   } = useAppointments();
 
   const [modal, setModal] = useState(null);
@@ -132,9 +138,15 @@ function AppointmentList() {
               <button className="appointment-list-action-btn" onClick={() => setModal({ type: 'reschedule', appointment: a })} title="Reschedule">
                 <CalendarClock size={16} />
               </button>
-              <button className="appointment-list-action-btn" onClick={() => handleComplete(a)} title="Mark completed" disabled={busy}>
-                <CheckCircle2 size={16} />
-              </button>
+              {isDoctor ? (
+                <button className="appointment-list-action-btn" onClick={() => setModal({ type: 'consult', appointment: a })} title="Start consultation">
+                  <Stethoscope size={16} />
+                </button>
+              ) : (
+                <button className="appointment-list-action-btn" onClick={() => handleComplete(a)} title="Mark completed" disabled={busy}>
+                  <CheckCircle2 size={16} />
+                </button>
+              )}
               <button className="appointment-list-action-btn appointment-list-action-danger" onClick={() => setModal({ type: 'cancel', appointment: a })} title="Cancel">
                 <XCircle size={16} />
               </button>
@@ -219,6 +231,19 @@ function AppointmentList() {
       <Modal open={modal?.type === 'reschedule'} onClose={closeModal} title="Reschedule Appointment">
         {modal?.type === 'reschedule' && (
           <BookAppointment initialData={modal.appointment} onSubmit={handleReschedule} onCancel={closeModal} />
+        )}
+      </Modal>
+
+      <Modal open={modal?.type === 'consult'} onClose={closeModal} title="Consultation">
+        {modal?.type === 'consult' && (
+          <ConsultationPanel
+            appointment={modal.appointment}
+            onClose={closeModal}
+            onCompleted={() => {
+              closeModal();
+              refetch();
+            }}
+          />
         )}
       </Modal>
 

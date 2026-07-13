@@ -82,5 +82,11 @@ export function useAppointments() {
     rescheduleAppointment,
     cancelAppointment,
     completeAppointment,
+    // Exposed for flows that update an appointment through another service
+    // (e.g. completing a consultation also flips the linked appointment to
+    // 'completed' via consultationService, bypassing this hook's own
+    // completeAppointment action) and need to pull the list's local state
+    // back in sync afterwards.
+    refetch: fetchAppointments,
   };
 }
