@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Plus, CalendarClock, XCircle, CheckCircle2, ChevronLeft, ChevronRight, CalendarX2, Stethoscope } from 'lucide-react';
+import { Search, Plus, CalendarClock, XCircle, CheckCircle2, ChevronLeft, ChevronRight, CalendarX2, Stethoscope, UserX } from 'lucide-react';
 import Input from '../shared/Input';
 import Button from '../shared/Button';
 import Badge from '../shared/Badge';
@@ -19,6 +19,7 @@ const STATUS_TONE = {
   completed: 'secondary',
   cancelled: 'danger',
   rescheduled: 'neutral',
+  'no-show': 'danger',
 };
 
 const STATUS_LABEL = {
@@ -26,6 +27,7 @@ const STATUS_LABEL = {
   completed: 'Completed',
   cancelled: 'Cancelled',
   rescheduled: 'Rescheduled',
+  'no-show': 'No-Show',
 };
 
 function AppointmentList() {
@@ -50,15 +52,20 @@ function AppointmentList() {
     rescheduleAppointment,
     cancelAppointment,
     completeAppointment,
+    markNoShow,
     refetch,
-  } = useAppointments();
+  } = useAppointments(isDoctor ? user?.name : undefined);
 
   const [modal, setModal] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
   const { showToast } = useToast();
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const closeModal = () => setModal(null);
+  const closeModal = () => {
+    setModal(null);
+    setCancelReason('');
+  };
 
   const handleBook = async (data) => {
     await bookAppointment(data);
@@ -75,11 +82,25 @@ function AppointmentList() {
   const handleCancel = async () => {
     setBusy(true);
     try {
-      await cancelAppointment(modal.appointment.id);
+      await cancelAppointment(modal.appointment.id, cancelReason);
       closeModal();
       showToast('Appointment cancelled.');
     } catch (err) {
       showToast(err.message || 'Failed to cancel appointment.', 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // FR-04.6: either Receptionist (F) or the treating Doctor (R own) can
+  // record that a scheduled patient never arrived.
+  const handleMarkNoShow = async (appt) => {
+    setBusy(true);
+    try {
+      await markNoShow(appt.id);
+      showToast('Appointment marked as No-Show.');
+    } catch (err) {
+      showToast(err.message || 'Failed to update appointment.', 'error');
     } finally {
       setBusy(false);
     }
@@ -147,6 +168,9 @@ function AppointmentList() {
                   <CheckCircle2 size={16} />
                 </button>
               )}
+              <button className="appointment-list-action-btn" onClick={() => handleMarkNoShow(a)} title="Mark as No-Show" disabled={busy}>
+                <UserX size={16} />
+              </button>
               <button className="appointment-list-action-btn appointment-list-action-danger" onClick={() => setModal({ type: 'cancel', appointment: a })} title="Cancel">
                 <XCircle size={16} />
               </button>
@@ -175,6 +199,7 @@ function AppointmentList() {
           <option value="completed">Completed</option>
           <option value="cancelled">Cancelled</option>
           <option value="rescheduled">Rescheduled</option>
+          <option value="no-show">No-Show</option>
         </select>
         <input
           type="date"
@@ -261,10 +286,20 @@ function AppointmentList() {
         }
       >
         {modal?.type === 'cancel' && (
-          <p className="appointment-list-cancel-text">
-            Cancel the appointment for <strong>{modal.appointment.patientName}</strong> with{' '}
-            <strong>{modal.appointment.doctorName}</strong> on {formatDate(modal.appointment.date)}?
-          </p>
+          <div className="appointment-list-cancel-content">
+            <p className="appointment-list-cancel-text">
+              Cancel the appointment for <strong>{modal.appointment.patientName}</strong> with{' '}
+              <strong>{modal.appointment.doctorName}</strong> on {formatDate(modal.appointment.date)}?
+            </p>
+            <label className="appointment-list-cancel-label">Reason (optional)</label>
+            <textarea
+              className="appointment-list-cancel-textarea"
+              rows={2}
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="e.g. Patient requested reschedule, doctor unavailable..."
+            />
+          </div>
         )}
       </Modal>
     </div>

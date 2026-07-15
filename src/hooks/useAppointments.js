@@ -3,7 +3,10 @@ import * as appointmentService from '../services/appointmentService';
 
 const PAGE_SIZE = 8;
 
-export function useAppointments() {
+// scopeDoctorName: pass the logged-in doctor's name to restrict the list to
+// their own appointments (SRS Section 9: Doctor = R own). Leave undefined
+// for Admin/Receptionist, who see every appointment.
+export function useAppointments(scopeDoctorName) {
   const [appointments, setAppointments] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -22,6 +25,7 @@ export function useAppointments() {
         search,
         status,
         date,
+        doctorName: scopeDoctorName || '',
         page,
         pageSize: PAGE_SIZE,
       });
@@ -32,7 +36,7 @@ export function useAppointments() {
     } finally {
       setLoading(false);
     }
-  }, [search, status, date, page]);
+  }, [search, status, date, scopeDoctorName, page]);
 
   useEffect(() => {
     fetchAppointments();
@@ -54,13 +58,18 @@ export function useAppointments() {
     return updated;
   };
 
-  const cancelAppointment = async (id) => {
-    await appointmentService.cancelAppointment(id);
+  const cancelAppointment = async (id, reason) => {
+    await appointmentService.cancelAppointment(id, reason);
     await fetchAppointments();
   };
 
   const completeAppointment = async (id) => {
     await appointmentService.completeAppointment(id);
+    await fetchAppointments();
+  };
+
+  const markNoShow = async (id) => {
+    await appointmentService.markNoShow(id);
     await fetchAppointments();
   };
 
@@ -82,6 +91,7 @@ export function useAppointments() {
     rescheduleAppointment,
     cancelAppointment,
     completeAppointment,
+    markNoShow,
     // Exposed for flows that update an appointment through another service
     // (e.g. completing a consultation also flips the linked appointment to
     // 'completed' via consultationService, bypassing this hook's own

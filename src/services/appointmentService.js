@@ -16,6 +16,10 @@ export const APPOINTMENT_STATUS = {
   COMPLETED: 'completed',
   CANCELLED: 'cancelled',
   RESCHEDULED: 'rescheduled',
+  // FR-04.6: the SRS requires exactly these 4 lifecycle statuses. No-Show
+  // was missing entirely from the original build — a scheduled appointment
+  // had no way to be marked as the patient simply not showing up.
+  NO_SHOW: 'no-show',
 };
 
 function seedDate(offsetDays) {
@@ -35,10 +39,19 @@ const SEED_APPOINTMENTS = [
 
 function loadAppointments() {
   const raw = localStorage.getItem(STORAGE_KEY);
-  if (raw) return JSON.parse(raw);
+  if (raw) {
+    const cached = JSON.parse(raw);
+    // Self-healing migration, same pattern used across the other services:
+    // backfills fields added to this schema after some browsers already
+    // cached appointment data, without touching real existing values.
+    const migrated = cached.map((a) => ({ cancellationReason: null, ...a }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+    return migrated;
+  }
   const seeded = SEED_APPOINTMENTS.map((a, i) => ({
     id: `AP-${String(i + 1).padStart(4, '0')}`,
     createdOn: new Date(Date.now() - i * 3600000).toISOString(),
+    cancellationReason: null,
     ...a,
   }));
   localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
@@ -57,10 +70,15 @@ function nextId() {
   return `AP-${String(max + 1).padStart(4, '0')}`;
 }
 
-export async function getAppointments({ search = '', status = '', date = '', page = 1, pageSize = 8 } = {}) {
+// doctorName scopes the list to that doctor's own appointments only —
+// SRS Section 9 gives Doctor 'R (own)' access to this module, not a full
+// view of every appointment in the clinic. Leave undefined/empty for
+// Admin/Receptionist, who see everything.
+export async function getAppointments({ search = '', status = '', date = '', doctorName = '', page = 1, pageSize = 8 } = {}) {
   await sleep(400);
   let filtered = appointments;
 
+  if (doctorName) filtered = filtered.filter((a) => a.doctorName === doctorName);
   if (search.trim()) {
     const q = search.trim().toLowerCase();
     filtered = filtered.filter(
@@ -122,6 +140,17 @@ function isSlotTaken(doctorName, date, timeSlot, excludeId) {
   );
 }
 
+// FR-04.2: "the system shall display only available (non-conflicting) time
+// slots" — once a doctor and date are chosen, the booking form calls this
+// instead of offering every slot in TIME_SLOTS regardless of what's already
+// taken. excludeId lets a reschedule keep the appointment's own current
+// slot in the list (it isn't "taken" by itself).
+export async function getAvailableSlotsForDoctor(doctorName, date, excludeId) {
+  await sleep(250);
+  if (!doctorName || !date) return TIME_SLOTS;
+  return TIME_SLOTS.filter((slot) => !isSlotTaken(doctorName, date, slot, excludeId));
+}
+
 export async function bookAppointment(appointmentData) {
   await sleep(500);
   if (isSlotTaken(appointmentData.doctorName, appointmentData.date, appointmentData.timeSlot)) {
@@ -153,10 +182,12 @@ export async function rescheduleAppointment(id, { date, timeSlot }) {
   return appointments.find((a) => a.id === id);
 }
 
-export async function cancelAppointment(id) {
+// FR-04.4: reason is optional ("may optionally be recorded" per the SRS) —
+// callers can omit it, but the field now actually exists to capture it in.
+export async function cancelAppointment(id, reason = '') {
   await sleep(400);
   appointments = appointments.map((a) =>
-    a.id === id ? { ...a, status: APPOINTMENT_STATUS.CANCELLED } : a
+    a.id === id ? { ...a, status: APPOINTMENT_STATUS.CANCELLED, cancellationReason: reason.trim() || null } : a
   );
   persist(appointments);
   return { success: true };
@@ -166,6 +197,18 @@ export async function completeAppointment(id) {
   await sleep(400);
   appointments = appointments.map((a) =>
     a.id === id ? { ...a, status: APPOINTMENT_STATUS.COMPLETED } : a
+  );
+  persist(appointments);
+  return { success: true };
+}
+
+// FR-04.6: marks a scheduled appointment as No-Show. Available to
+// Receptionist (F) and Doctor (R own) per the alternate flow in the SRS use
+// case — either can record that the patient never arrived.
+export async function markNoShow(id) {
+  await sleep(400);
+  appointments = appointments.map((a) =>
+    a.id === id ? { ...a, status: APPOINTMENT_STATUS.NO_SHOW } : a
   );
   persist(appointments);
   return { success: true };

@@ -1,0 +1,69 @@
+.prescription-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  background: var(--color-white);
+}
+
+.prescription-card-compact {
+  padding: 12px;
+}
+
+.prescription-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.prescription-card-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.prescription-card-meta {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin: 4px 0 12px;
+}
+
+.prescription-card-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.prescription-card-table th {
+  text-align: left;
+  padding: 6px 8px;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.prescription-card-table td {
+  padding: 6px 8px;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.prescription-card-table tr:last-child td {
+  border-bottom: none;
+}
+
+.prescription-card-dispensed {
+  font-size: 12px;
+  color: var(--color-secondary);
+  margin: 10px 0 0;
+}
+
+@media (max-width: 480px) {
+  .prescription-card-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}

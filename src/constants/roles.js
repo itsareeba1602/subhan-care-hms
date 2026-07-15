@@ -90,6 +90,26 @@ export const ROLE_MODULE_ACCESS = {
     [ROLES.PHARMACIST]: '—',
     [ROLES.BILLING_STAFF]: '—',
   },
+  // SRS Section 9: Prescriptions — Admin = R (oversight), Doctor = F for
+  // their own patients (creation happens inside an active consultation
+  // only, per FR-05.1/UC-04 — there's no standalone "add" on this page),
+  // Pharmacist = L (can view and dispense, cannot alter dosage — FR-05.3).
+  prescriptions: {
+    [ROLES.ADMIN]: 'R',
+    [ROLES.DOCTOR]: 'F',
+    [ROLES.RECEPTIONIST]: '—',
+    [ROLES.PHARMACIST]: 'L',
+    [ROLES.BILLING_STAFF]: '—',
+  },
+  // SRS Section 9 Table 5: Inventory is Full access for Admin and
+  // Pharmacist only — Doctor, Receptionist, and Billing Staff have none.
+  inventory: {
+    [ROLES.ADMIN]: 'F',
+    [ROLES.DOCTOR]: '—',
+    [ROLES.RECEPTIONIST]: '—',
+    [ROLES.PHARMACIST]: 'F',
+    [ROLES.BILLING_STAFF]: '—',
+  },
 };
 
 export function hasModuleAccess(role, moduleKey) {

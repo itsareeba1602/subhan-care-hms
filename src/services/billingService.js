@@ -8,7 +8,10 @@ import { getPatients } from './patientService';
 const STORAGE_KEY = 'subhan_care_invoices';
 
 export const PAYMENT_METHODS = ['Cash', 'Card', 'Bank Transfer', 'JazzCash', 'EasyPaisa'];
-export const INVOICE_STATUS = { PAID: 'paid', UNPAID: 'unpaid' };
+// UC-05 alternate flow: "If payment is partial, system records the invoice
+// as 'Partially Paid' with outstanding balance" — this status was missing
+// entirely; markInvoicePaid only ever recorded a full PAID before.
+export const INVOICE_STATUS = { PAID: 'paid', UNPAID: 'unpaid', PARTIALLY_PAID: 'partially-paid' };
 export const LINE_ITEM_TYPES = ['Consultation', 'Medicine', 'Lab Test', 'Other'];
 
 function seedDate(offsetDays) {
@@ -40,12 +43,30 @@ const SEED_INVOICES = [
 
 function loadInvoices() {
   const raw = localStorage.getItem(STORAGE_KEY);
-  if (raw) return JSON.parse(raw);
-  const seeded = SEED_INVOICES.map((inv, i) => ({
-    id: `INV-${String(i + 1).padStart(4, '0')}`,
-    total: total(inv.items),
-    ...inv,
-  }));
+  if (raw) {
+    const cached = JSON.parse(raw);
+    // Self-healing migration, same pattern used across the other services:
+    // backfills amountPaid/balanceDue for invoices cached before those
+    // fields existed, without touching any invoice's real total or status.
+    const migrated = cached.map((inv) => ({
+      amountPaid: inv.status === INVOICE_STATUS.PAID ? inv.total : 0,
+      balanceDue: inv.status === INVOICE_STATUS.PAID ? 0 : inv.total,
+      ...inv,
+    }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+    return migrated;
+  }
+  const seeded = SEED_INVOICES.map((inv, i) => {
+    const invTotal = total(inv.items);
+    const amountPaid = inv.status === INVOICE_STATUS.PAID ? invTotal : 0;
+    return {
+      id: `INV-${String(i + 1).padStart(4, '0')}`,
+      total: invTotal,
+      amountPaid,
+      balanceDue: invTotal - amountPaid,
+      ...inv,
+    };
+  });
   localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
   return seeded;
 }
@@ -62,7 +83,7 @@ function nextId() {
   return `INV-${String(max + 1).padStart(4, '0')}`;
 }
 
-export async function getInvoices({ search = '', status = '', page = 1, pageSize = 8 } = {}) {
+export async function getInvoices({ search = '', status = '', dateFrom = '', dateTo = '', page = 1, pageSize = 8 } = {}) {
   await sleep(400);
   let filtered = invoices;
 
@@ -73,6 +94,8 @@ export async function getInvoices({ search = '', status = '', page = 1, pageSize
     );
   }
   if (status) filtered = filtered.filter((i) => i.status === status);
+  if (dateFrom) filtered = filtered.filter((i) => i.date.slice(0, 10) >= dateFrom);
+  if (dateTo) filtered = filtered.filter((i) => i.date.slice(0, 10) <= dateTo);
 
   filtered = [...filtered].sort((a, b) => new Date(b.date) - new Date(a.date));
 
@@ -82,10 +105,17 @@ export async function getInvoices({ search = '', status = '', page = 1, pageSize
   return { data, total: invTotal };
 }
 
-export async function getOutstandingSummary() {
+// FR-07.5: "view outstanding/unpaid invoices ... filtered by patient or
+// date range." dateFrom/dateTo were entirely absent before — this only
+// ever summarized *all* unpaid invoices with no way to scope by period.
+export async function getOutstandingSummary({ dateFrom = '', dateTo = '' } = {}) {
   await sleep(150);
-  const unpaid = invoices.filter((i) => i.status === INVOICE_STATUS.UNPAID);
-  return { count: unpaid.length, amount: unpaid.reduce((sum, i) => sum + i.total, 0) };
+  let unpaid = invoices.filter(
+    (i) => i.status === INVOICE_STATUS.UNPAID || i.status === INVOICE_STATUS.PARTIALLY_PAID
+  );
+  if (dateFrom) unpaid = unpaid.filter((i) => i.date.slice(0, 10) >= dateFrom);
+  if (dateTo) unpaid = unpaid.filter((i) => i.date.slice(0, 10) <= dateTo);
+  return { count: unpaid.length, amount: unpaid.reduce((sum, i) => sum + i.balanceDue, 0) };
 }
 
 // For the Generate Invoice form's patient select.
@@ -98,11 +128,14 @@ export async function generateInvoice({ patientName, items }) {
   await sleep(500);
   if (!items.length) throw new Error('Add at least one line item before generating the invoice.');
 
+  const invTotal = total(items);
   const newInvoice = {
     id: nextId(),
     patientName,
     items,
-    total: total(items),
+    total: invTotal,
+    amountPaid: 0,
+    balanceDue: invTotal,
     paymentMethod: '',
     status: INVOICE_STATUS.UNPAID,
     date: new Date().toISOString(),
@@ -112,10 +145,29 @@ export async function generateInvoice({ patientName, items }) {
   return newInvoice;
 }
 
-export async function markInvoicePaid(id, paymentMethod) {
+// FR-07.2 / UC-05: records a payment against an invoice. If the amount
+// covers the full remaining balance, the invoice is fully Paid; otherwise
+// it's recorded as Partially Paid with the remaining balance tracked, and
+// can be paid down further in subsequent calls. amountPaid defaults to the
+// full outstanding balance so existing "Mark as Paid" callers keep working
+// unchanged.
+export async function markInvoicePaid(id, paymentMethod, amountPaid) {
   await sleep(400);
+  const target = invoices.find((i) => i.id === id);
+  if (!target) throw new Error('Invoice not found.');
+
+  const payment = amountPaid == null ? target.balanceDue : Number(amountPaid);
+  if (payment <= 0) throw new Error('Payment amount must be greater than zero.');
+  if (payment > target.balanceDue) throw new Error('Payment cannot exceed the outstanding balance.');
+
+  const newAmountPaid = target.amountPaid + payment;
+  const newBalance = target.total - newAmountPaid;
+  const newStatus = newBalance <= 0 ? INVOICE_STATUS.PAID : INVOICE_STATUS.PARTIALLY_PAID;
+
   invoices = invoices.map((i) =>
-    i.id === id ? { ...i, status: INVOICE_STATUS.PAID, paymentMethod } : i
+    i.id === id
+      ? { ...i, status: newStatus, paymentMethod, amountPaid: newAmountPaid, balanceDue: Math.max(0, newBalance) }
+      : i
   );
   persist(invoices);
   return invoices.find((i) => i.id === id);

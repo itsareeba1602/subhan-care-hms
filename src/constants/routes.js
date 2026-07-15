@@ -11,7 +11,9 @@ export const ROUTES = {
   DOCTORS: '/doctors',
   APPOINTMENTS: '/appointments',
   MEDICAL_HISTORY: '/medical-history',
+  PRESCRIPTIONS: '/prescriptions',
   BILLING: '/billing',
+  INVENTORY: '/inventory',
   STAFF: '/staff',
 
   ROOT: '/',

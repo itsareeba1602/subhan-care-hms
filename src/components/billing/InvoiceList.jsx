@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Plus, Eye, CheckCircle2, ChevronLeft, ChevronRight, AlertTriangle, Receipt } from 'lucide-react';
+import { Search, Plus, Eye, CheckCircle2, ChevronLeft, ChevronRight, AlertTriangle, Receipt, Printer } from 'lucide-react';
 import Input from '../shared/Input';
 import Button from '../shared/Button';
 import Badge from '../shared/Badge';
@@ -10,8 +10,11 @@ import GenerateInvoice from './GenerateInvoice';
 import { useBilling } from '../../hooks/useBilling';
 import { useToast } from '../../hooks/useToast';
 import { PAYMENT_METHODS } from '../../services/billingService';
-import { formatDate } from '../../utils/formatters';
+import { formatDate, formatCurrency } from '../../utils/formatters';
 import './InvoiceList.css';
+
+const STATUS_TONE = { paid: 'secondary', unpaid: 'danger', 'partially-paid': 'primary' };
+const STATUS_LABEL = { paid: 'Paid', unpaid: 'Unpaid', 'partially-paid': 'Partially Paid' };
 
 function InvoiceList() {
   const {
@@ -25,6 +28,10 @@ function InvoiceList() {
     setSearch,
     status,
     setStatus,
+    dateFrom,
+    setDateFrom,
+    dateTo,
+    setDateTo,
     page,
     setPage,
     generateInvoice,
@@ -33,11 +40,15 @@ function InvoiceList() {
 
   const [modal, setModal] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[0]);
+  const [paymentAmount, setPaymentAmount] = useState('');
   const [busy, setBusy] = useState(false);
   const { showToast } = useToast();
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
-  const closeModal = () => setModal(null);
+  const closeModal = () => {
+    setModal(null);
+    setPaymentAmount('');
+  };
 
   const handleGenerate = async (data) => {
     await generateInvoice(data);
@@ -48,15 +59,26 @@ function InvoiceList() {
   const handleMarkPaid = async () => {
     setBusy(true);
     try {
-      await markInvoicePaid(modal.invoice.id, paymentMethod);
+      await markInvoicePaid(modal.invoice.id, paymentMethod, Number(paymentAmount));
       closeModal();
-      showToast('Invoice marked as paid.');
+      showToast('Payment recorded.');
     } catch (err) {
       showToast(err.message || 'Failed to record payment.', 'error');
     } finally {
       setBusy(false);
     }
   };
+
+  const openPayModal = (invoice) => {
+    setModal({ type: 'pay', invoice });
+    setPaymentAmount(String(invoice.balanceDue ?? invoice.total));
+  };
+
+  // FR-07.3: "printable/downloadable PDF receipt." Scopes the browser's
+  // native print dialog to just the receipt via a print stylesheet — the
+  // person can pick "Save as PDF" as the destination, no extra PDF library
+  // needed for a receipt this simple.
+  const handlePrintReceipt = () => window.print();
 
   const columns = [
     {
@@ -70,15 +92,11 @@ function InvoiceList() {
       ),
     },
     { key: 'date', header: 'Date', render: (i) => formatDate(i.date) },
-    { key: 'total', header: 'Amount', render: (i) => `Rs. ${i.total.toLocaleString('en-PK')}` },
+    { key: 'total', header: 'Amount', render: (i) => formatCurrency(i.total) },
     {
       key: 'status',
       header: 'Status',
-      render: (i) => (
-        <Badge tone={i.status === 'paid' ? 'secondary' : 'danger'}>
-          {i.status === 'paid' ? 'Paid' : 'Unpaid'}
-        </Badge>
-      ),
+      render: (i) => <Badge tone={STATUS_TONE[i.status]}>{STATUS_LABEL[i.status]}</Badge>,
     },
     {
       key: 'actions',
@@ -88,8 +106,8 @@ function InvoiceList() {
           <button className="invoice-list-action-btn" onClick={() => setModal({ type: 'view', invoice: i })} title="View receipt">
             <Eye size={16} />
           </button>
-          {i.status === 'unpaid' && (
-            <button className="invoice-list-action-btn" onClick={() => setModal({ type: 'pay', invoice: i })} title="Mark as paid">
+          {(i.status === 'unpaid' || i.status === 'partially-paid') && (
+            <button className="invoice-list-action-btn" onClick={() => openPayModal(i)} title="Record payment">
               <CheckCircle2 size={16} />
             </button>
           )}
@@ -121,7 +139,22 @@ function InvoiceList() {
           <option value="">All Status</option>
           <option value="paid">Paid</option>
           <option value="unpaid">Unpaid</option>
+          <option value="partially-paid">Partially Paid</option>
         </select>
+        <input
+          type="date"
+          className="invoice-list-date"
+          value={dateFrom}
+          onChange={(e) => setDateFrom(e.target.value)}
+          title="From date"
+        />
+        <input
+          type="date"
+          className="invoice-list-date"
+          value={dateTo}
+          onChange={(e) => setDateTo(e.target.value)}
+          title="To date"
+        />
         <Button onClick={() => setModal({ type: 'generate' })}>
           <Plus size={18} /> Generate Invoice
         </Button>
@@ -170,7 +203,7 @@ function InvoiceList() {
 
       <Modal open={modal?.type === 'view'} onClose={closeModal} title="Invoice / Receipt">
         {modal?.type === 'view' && (
-          <div className="invoice-receipt">
+          <div className="invoice-receipt invoice-receipt-printable">
             <div className="invoice-receipt-header">
               <span>{modal.invoice.id}</span>
               <span>{formatDate(modal.invoice.date)}</span>
@@ -185,19 +218,28 @@ function InvoiceList() {
                   <tr key={i}>
                     <td>{item.description}</td>
                     <td>{item.qty}</td>
-                    <td>Rs. {item.unitPrice}</td>
-                    <td>Rs. {item.qty * item.unitPrice}</td>
+                    <td>{formatCurrency(item.unitPrice)}</td>
+                    <td>{formatCurrency(item.qty * item.unitPrice)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
             <div className="invoice-receipt-total">
               <span>Total</span>
-              <strong>Rs. {modal.invoice.total.toLocaleString('en-PK')}</strong>
+              <strong>{formatCurrency(modal.invoice.total)}</strong>
             </div>
-            <Badge tone={modal.invoice.status === 'paid' ? 'secondary' : 'danger'}>
-              {modal.invoice.status === 'paid' ? `Paid via ${modal.invoice.paymentMethod}` : 'Unpaid'}
+            {modal.invoice.status === 'partially-paid' && (
+              <div className="invoice-receipt-balance">
+                <span>Paid: {formatCurrency(modal.invoice.amountPaid)}</span>
+                <span>Balance Due: {formatCurrency(modal.invoice.balanceDue)}</span>
+              </div>
+            )}
+            <Badge tone={STATUS_TONE[modal.invoice.status]}>
+              {modal.invoice.status === 'unpaid' ? 'Unpaid' : `${STATUS_LABEL[modal.invoice.status]} via ${modal.invoice.paymentMethod || '—'}`}
             </Badge>
+            <button className="invoice-receipt-print-btn invoice-receipt-no-print" onClick={handlePrintReceipt}>
+              <Printer size={15} /> Print / Save as PDF
+            </button>
           </div>
         )}
       </Modal>
@@ -205,7 +247,7 @@ function InvoiceList() {
       <Modal
         open={modal?.type === 'pay'}
         onClose={closeModal}
-        title="Mark Invoice as Paid"
+        title="Record Payment"
         footer={
           <>
             <Button variant="ghost" onClick={closeModal}>Cancel</Button>
@@ -217,6 +259,22 @@ function InvoiceList() {
       >
         {modal?.type === 'pay' && (
           <div className="invoice-list-pay-field">
+            <p className="invoice-list-pay-balance">
+              Outstanding balance: <strong>{formatCurrency(modal.invoice.balanceDue ?? modal.invoice.total)}</strong>
+            </p>
+            <label className="invoice-list-pay-label">Amount Received</label>
+            <input
+              type="number"
+              min="1"
+              max={modal.invoice.balanceDue ?? modal.invoice.total}
+              className="invoice-list-pay-amount"
+              value={paymentAmount}
+              onChange={(e) => setPaymentAmount(e.target.value)}
+            />
+            <p className="invoice-list-pay-hint">
+              Enter less than the full balance to record a partial payment — the invoice will be marked{' '}
+              <em>Partially Paid</em> with the remainder still outstanding.
+            </p>
             <label className="invoice-list-pay-label">Payment Method</label>
             <select
               className="invoice-list-pay-select"

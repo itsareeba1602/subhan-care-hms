@@ -12,6 +12,8 @@ export function useBilling() {
 
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [page, setPage] = useState(1);
 
   const fetchInvoices = useCallback(async () => {
@@ -19,8 +21,8 @@ export function useBilling() {
     setError('');
     try {
       const [{ data, total: count }, summary] = await Promise.all([
-        billingService.getInvoices({ search, status, page, pageSize: PAGE_SIZE }),
-        billingService.getOutstandingSummary(),
+        billingService.getInvoices({ search, status, dateFrom, dateTo, page, pageSize: PAGE_SIZE }),
+        billingService.getOutstandingSummary({ dateFrom, dateTo }),
       ]);
       setInvoices(data);
       setTotal(count);
@@ -30,7 +32,7 @@ export function useBilling() {
     } finally {
       setLoading(false);
     }
-  }, [search, status, page]);
+  }, [search, status, dateFrom, dateTo, page]);
 
   useEffect(() => {
     fetchInvoices();
@@ -38,7 +40,7 @@ export function useBilling() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, status]);
+  }, [search, status, dateFrom, dateTo]);
 
   const generateInvoice = async (data) => {
     const created = await billingService.generateInvoice(data);
@@ -46,8 +48,8 @@ export function useBilling() {
     return created;
   };
 
-  const markInvoicePaid = async (id, paymentMethod) => {
-    const updated = await billingService.markInvoicePaid(id, paymentMethod);
+  const markInvoicePaid = async (id, paymentMethod, amountPaid) => {
+    const updated = await billingService.markInvoicePaid(id, paymentMethod, amountPaid);
     await fetchInvoices();
     return updated;
   };
@@ -63,6 +65,10 @@ export function useBilling() {
     setSearch,
     status,
     setStatus,
+    dateFrom,
+    setDateFrom,
+    dateTo,
+    setDateTo,
     page,
     setPage,
     generateInvoice,

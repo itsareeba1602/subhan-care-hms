@@ -1,23 +1,22 @@
-.appointment-list-wrapper {
+.prescription-list-wrapper {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.appointment-list-toolbar {
+.prescription-list-toolbar {
   display: flex;
   gap: 12px;
   align-items: flex-end;
   flex-wrap: wrap;
 }
 
-.appointment-list-search {
+.prescription-list-search {
   flex: 1;
-  min-width: 180px;
+  min-width: 200px;
 }
 
-.appointment-list-filter,
-.appointment-list-date {
+.prescription-list-filter {
   height: var(--input-height);
   padding: 0 14px;
   border: 1.5px solid var(--color-border);
@@ -28,28 +27,28 @@
   color: var(--color-text-primary);
 }
 
-.appointment-list-name {
+.prescription-list-name {
   font-weight: 600;
   font-size: 14px;
 }
 
-.appointment-list-id {
+.prescription-list-id {
   font-size: 12px;
   color: var(--color-text-muted);
 }
 
-.appointment-list-time {
-  font-size: 12px;
+.prescription-list-meds {
+  font-size: 13px;
   color: var(--color-text-secondary);
 }
 
-.appointment-list-actions {
+.prescription-list-actions {
   display: flex;
   gap: 6px;
   justify-content: flex-end;
 }
 
-.appointment-list-action-btn {
+.prescription-list-action-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -62,22 +61,17 @@
   cursor: pointer;
 }
 
-.appointment-list-action-btn:hover {
+.prescription-list-action-btn:hover {
   background: rgba(37, 99, 235, 0.06);
   color: var(--color-primary);
 }
 
-.appointment-list-action-danger:hover {
-  background: rgba(239, 68, 68, 0.06);
-  color: var(--color-danger);
-}
-
-.appointment-list-error {
+.prescription-list-error {
   color: var(--color-danger);
   font-size: 13px;
 }
 
-.appointment-list-pagination {
+.prescription-list-pagination {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -85,18 +79,18 @@
   gap: 10px;
 }
 
-.appointment-list-pagination-info {
+.prescription-list-pagination-info {
   font-size: 13px;
   color: var(--color-text-secondary);
 }
 
-.appointment-list-pagination-controls {
+.prescription-list-pagination-controls {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.appointment-list-page-btn {
+.prescription-list-page-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -108,57 +102,33 @@
   cursor: pointer;
 }
 
-.appointment-list-page-btn:disabled {
+.prescription-list-page-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.appointment-list-page-current {
+.prescription-list-page-current {
   font-size: 13px;
   color: var(--color-text-secondary);
 }
 
-.appointment-list-cancel-text {
+.prescription-list-dispense-text {
   font-size: 14px;
   color: var(--color-text-secondary);
   line-height: 1.5;
 }
 
-.appointment-list-cancel-content {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.appointment-list-cancel-label {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--color-text-primary);
-}
-
-.appointment-list-cancel-textarea {
-  padding: 10px 12px;
-  border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-input);
-  font-size: 13.5px;
-  font-family: var(--font-family);
-  resize: vertical;
-  box-sizing: border-box;
-}
-
-/* --- Responsive --- */
 @media (max-width: 768px) {
-  .appointment-list-toolbar {
+  .prescription-list-toolbar {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .appointment-list-filter,
-  .appointment-list-date {
+  .prescription-list-filter {
     width: 100%;
   }
 
-  .appointment-list-pagination {
+  .prescription-list-pagination {
     flex-direction: column;
     align-items: flex-start;
   }

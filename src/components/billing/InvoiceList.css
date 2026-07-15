@@ -39,6 +39,17 @@
   color: var(--color-text-primary);
 }
 
+.invoice-list-date {
+  height: var(--input-height);
+  padding: 0 12px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-input);
+  font-size: 13.5px;
+  font-family: var(--font-family);
+  background: var(--color-white);
+  color: var(--color-text-primary);
+}
+
 .invoice-list-name {
   font-weight: 600;
   font-size: 14px;
@@ -125,6 +136,29 @@
   gap: 6px;
 }
 
+.invoice-list-pay-balance {
+  font-size: 13.5px;
+  color: var(--color-text-secondary);
+  margin: 0 0 4px;
+}
+
+.invoice-list-pay-amount {
+  height: var(--input-height);
+  padding: 0 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-input);
+  font-size: 14px;
+  font-family: var(--font-family);
+  box-sizing: border-box;
+}
+
+.invoice-list-pay-hint {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin: 2px 0 8px;
+  line-height: 1.4;
+}
+
 .invoice-list-pay-label {
   font-size: 13px;
   font-weight: 500;
@@ -175,6 +209,61 @@
   justify-content: space-between;
   font-size: 15px;
   padding-top: 6px;
+}
+
+.invoice-receipt-balance {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--color-danger);
+  padding-top: 2px;
+  border-top: 1px dashed var(--color-border);
+}
+
+.invoice-receipt-print-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  font-size: 13px;
+  color: var(--color-primary);
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-input);
+  padding: 8px 14px;
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+.invoice-receipt-print-btn:hover {
+  background: rgba(37, 99, 235, 0.06);
+}
+
+/* FR-07.3: printing/downloading the receipt as a PDF. Scopes the browser's
+   print output to just the receipt card — everything else in the app
+   (sidebar, header, other modals) is hidden so "Print > Save as PDF"
+   produces a clean receipt, not a screenshot of the whole page. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .invoice-receipt-printable,
+  .invoice-receipt-printable * {
+    visibility: visible;
+  }
+
+  .invoice-receipt-printable {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 24px;
+  }
+
+  .invoice-receipt-no-print {
+    display: none !important;
+  }
 }
 
 /* --- Responsive --- */

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Input from '../shared/Input';
 import Button from '../shared/Button';
 import Spinner from '../shared/Spinner';
-import { getBookingOptions, TIME_SLOTS } from '../../services/appointmentService';
+import { getBookingOptions, getAvailableSlotsForDoctor, TIME_SLOTS } from '../../services/appointmentService';
 import './BookAppointment.css';
 
 const TODAY = new Date().toISOString().slice(0, 10);
@@ -22,6 +22,8 @@ function BookAppointment({ initialData, onSubmit, onCancel }) {
   const [errors, setErrors] = useState({});
   const [apiError, setApiError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [availableSlots, setAvailableSlots] = useState(TIME_SLOTS);
+  const [slotsLoading, setSlotsLoading] = useState(false);
 
   useEffect(() => {
     if (isReschedule) return;
@@ -30,6 +32,31 @@ function BookAppointment({ initialData, onSubmit, onCancel }) {
       setLoadingOptions(false);
     });
   }, [isReschedule]);
+
+  // FR-04.2: once a doctor and date are both chosen, only show slots that
+  // aren't already booked for that doctor on that date — rather than every
+  // slot in TIME_SLOTS and only catching the conflict at submit time.
+  useEffect(() => {
+    if (!form.doctorName || !form.date) {
+      setAvailableSlots(TIME_SLOTS);
+      return;
+    }
+    let cancelled = false;
+    setSlotsLoading(true);
+    getAvailableSlotsForDoctor(form.doctorName, form.date, initialData?.id).then((slots) => {
+      if (cancelled) return;
+      setAvailableSlots(slots);
+      setSlotsLoading(false);
+      // If the previously selected slot got booked by someone else in the
+      // meantime (or a new doctor/date no longer offers it), clear it
+      // rather than silently submitting a now-invalid selection.
+      setForm((prev) => (prev.timeSlot && !slots.includes(prev.timeSlot) ? { ...prev, timeSlot: '' } : prev));
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.doctorName, form.date]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -118,9 +145,23 @@ function BookAppointment({ initialData, onSubmit, onCancel }) {
           <label className="book-appointment-label">
             Time Slot <span className="book-appointment-required">*</span>
           </label>
-          <select name="timeSlot" value={form.timeSlot} onChange={handleChange} className="book-appointment-select">
-            <option value="">Select time</option>
-            {TIME_SLOTS.map((slot) => (
+          <select
+            name="timeSlot"
+            value={form.timeSlot}
+            onChange={handleChange}
+            className="book-appointment-select"
+            disabled={!form.doctorName || !form.date || slotsLoading}
+          >
+            <option value="">
+              {!form.doctorName || !form.date
+                ? 'Select doctor and date first'
+                : slotsLoading
+                ? 'Checking availability...'
+                : availableSlots.length === 0
+                ? 'No slots available for this date'
+                : 'Select time'}
+            </option>
+            {availableSlots.map((slot) => (
               <option key={slot} value={slot}>{slot}</option>
             ))}
           </select>

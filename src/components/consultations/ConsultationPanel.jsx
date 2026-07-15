@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
-import { FileClock } from 'lucide-react';
+import { FileClock, Pill, Plus } from 'lucide-react';
 import Button from '../shared/Button';
 import Spinner from '../shared/Spinner';
 import MedicalHistoryTimeline from './MedicalHistoryTimeline';
+import PrescriptionCard from '../prescriptions/PrescriptionCard';
+import PrescriptionForm from '../prescriptions/PrescriptionForm';
 import { useConsultation } from '../../hooks/useConsultation';
+import { useConsultationPrescriptions } from '../../hooks/useConsultationPrescriptions';
 import { useToast } from '../../hooks/useToast';
 import * as consultationService from '../../services/consultationService';
 import './ConsultationPanel.css';
@@ -24,6 +27,14 @@ function ConsultationPanel({ appointment, onClose, onCompleted }) {
   const [pastHistory, setPastHistory] = useState([]);
   const [pastLoading, setPastLoading] = useState(true);
   const [addendumNote, setAddendumNote] = useState('');
+  const [showPrescriptionForm, setShowPrescriptionForm] = useState(false);
+
+  const {
+    prescriptions,
+    loading: prescriptionsLoading,
+    saving: prescriptionSaving,
+    addPrescription,
+  } = useConsultationPrescriptions(consultation?.id);
 
   useEffect(() => {
     if (!consultation) return;
@@ -89,6 +100,12 @@ function ConsultationPanel({ appointment, onClose, onCompleted }) {
     } catch (err) {
       showToast(err.message || 'Failed to add addendum.', 'error');
     }
+  };
+
+  const handleAddPrescription = async (medicines) => {
+    await addPrescription({ patientName: appointment.patientName, doctorName: appointment.doctorName, medicines });
+    setShowPrescriptionForm(false);
+    showToast('Prescription saved.');
   };
 
   if (loading) return <Spinner label="Starting consultation..." />;
@@ -164,6 +181,40 @@ function ConsultationPanel({ appointment, onClose, onCompleted }) {
             placeholder="e.g. Return in 1 week if symptoms persist"
           />
         </div>
+      </div>
+
+      <div className="consultation-panel-prescriptions">
+        <div className="consultation-panel-prescriptions-header">
+          <div className="consultation-panel-history-title">
+            <Pill size={15} /> Prescriptions
+          </div>
+          {!isCompleted && !showPrescriptionForm && (
+            <button className="consultation-panel-add-rx" onClick={() => setShowPrescriptionForm(true)}>
+              <Plus size={14} /> Add Prescription
+            </button>
+          )}
+        </div>
+
+        {prescriptionsLoading ? (
+          <p className="consultation-panel-rx-loading">Loading prescriptions...</p>
+        ) : (
+          <div className="consultation-panel-rx-list">
+            {prescriptions.map((rx) => (
+              <PrescriptionCard key={rx.id} prescription={rx} compact />
+            ))}
+            {prescriptions.length === 0 && !showPrescriptionForm && (
+              <p className="consultation-panel-rx-empty">No prescriptions issued yet for this consultation.</p>
+            )}
+          </div>
+        )}
+
+        {showPrescriptionForm && (
+          <PrescriptionForm
+            saving={prescriptionSaving}
+            onSubmit={handleAddPrescription}
+            onCancel={() => setShowPrescriptionForm(false)}
+          />
+        )}
       </div>
 
       {isCompleted && (
