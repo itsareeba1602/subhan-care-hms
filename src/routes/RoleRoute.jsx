@@ -12,7 +12,7 @@ function RoleRoute({ moduleKey }) {
   const { user } = useAuth();
 
   if (!hasModuleAccess(user?.role, moduleKey)) {
-    return <Navigate to={ROUTES.DASHBOARD} replace />;
+    return <Navigate to={ROUTES.FORBIDDEN} replace />;
   }
 
   return <Outlet />;

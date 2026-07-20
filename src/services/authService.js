@@ -151,6 +151,24 @@ export async function resetPassword({ email, newPassword }) {
   return { success: true };
 }
 
+// Settings page self-service change: unlike resetPassword (reached only
+// after OTP already verified identity), this path requires the current
+// password as proof of identity since the person is already logged in and
+// could otherwise be someone who walked up to an unlocked, unattended
+// session (SR-01/SR-08 context).
+export async function changePassword({ email, currentPassword, newPassword }) {
+  await sleep(600);
+  const user = MOCK_USERS.find((u) => u.email === email);
+  if (!user) {
+    throw new Error('No account found with that email.');
+  }
+  if (user.password !== currentPassword) {
+    throw new Error('Current password is incorrect.');
+  }
+  user.password = newPassword;
+  return { success: true };
+}
+
 export function getSession() {
   const raw = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
   return raw ? JSON.parse(raw) : null;

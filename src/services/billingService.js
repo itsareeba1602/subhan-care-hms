@@ -51,6 +51,7 @@ function loadInvoices() {
     const migrated = cached.map((inv) => ({
       amountPaid: inv.status === INVOICE_STATUS.PAID ? inv.total : 0,
       balanceDue: inv.status === INVOICE_STATUS.PAID ? 0 : inv.total,
+      creditNotes: [],
       ...inv,
     }));
     localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
@@ -64,6 +65,7 @@ function loadInvoices() {
       total: invTotal,
       amountPaid,
       balanceDue: invTotal - amountPaid,
+      creditNotes: [],
       ...inv,
     };
   });
@@ -81,6 +83,14 @@ function nextId() {
   const nums = invoices.map((i) => parseInt(i.id.split('-')[1], 10));
   const max = nums.length ? Math.max(...nums) : 0;
   return `INV-${String(max + 1).padStart(4, '0')}`;
+}
+
+function nextCreditNoteId() {
+  const nums = invoices
+    .flatMap((i) => i.creditNotes || [])
+    .map((c) => parseInt(c.id.split('-')[1], 10));
+  const max = nums.length ? Math.max(...nums) : 0;
+  return `CN-${String(max + 1).padStart(4, '0')}`;
 }
 
 export async function getInvoices({ search = '', status = '', dateFrom = '', dateTo = '', page = 1, pageSize = 8 } = {}) {
@@ -136,6 +146,7 @@ export async function generateInvoice({ patientName, items }) {
     total: invTotal,
     amountPaid: 0,
     balanceDue: invTotal,
+    creditNotes: [],
     paymentMethod: '',
     status: INVOICE_STATUS.UNPAID,
     date: new Date().toISOString(),
@@ -169,6 +180,56 @@ export async function markInvoicePaid(id, paymentMethod, amountPaid) {
       ? { ...i, status: newStatus, paymentMethod, amountPaid: newAmountPaid, balanceDue: Math.max(0, newBalance) }
       : i
   );
+  persist(invoices);
+  return invoices.find((i) => i.id === id);
+}
+
+// FR-07.4 / IR-02: "The system shall not permit deletion of a finalized
+// invoice; corrections shall only be made through a recorded credit note
+// linked to the original invoice." There is deliberately no deleteInvoice
+// export anywhere in this service — a credit note is the *only* correction
+// path, and it never touches the original invoice's `items`/`total` (those
+// stay exactly as finalized; only `balanceDue`/`status` move, and the
+// credit itself is kept as a permanent, reasoned, timestamped record
+// linked to the invoice for audit purposes).
+export async function issueCreditNote(id, { reason, amount }) {
+  await sleep(400);
+  const target = invoices.find((i) => i.id === id);
+  if (!target) throw new Error('Invoice not found.');
+  if (!reason || !reason.trim()) throw new Error('A reason is required for the credit note.');
+
+  const amt = Number(amount);
+  if (!amt || amt <= 0) throw new Error('Credit amount must be greater than zero.');
+
+  const alreadyCredited = (target.creditNotes || []).reduce((sum, c) => sum + c.amount, 0);
+  const creditableRemaining = target.total - alreadyCredited;
+  if (amt > creditableRemaining) {
+    throw new Error(
+      `Credit note cannot exceed the invoice's remaining creditable amount (Rs. ${creditableRemaining.toLocaleString('en-PK')}).`
+    );
+  }
+
+  const creditNote = {
+    id: nextCreditNoteId(),
+    amount: amt,
+    reason: reason.trim(),
+    issuedOn: new Date().toISOString(),
+  };
+
+  invoices = invoices.map((i) => {
+    if (i.id !== id) return i;
+    const creditNotes = [...(i.creditNotes || []), creditNote];
+    const totalCredited = creditNotes.reduce((sum, c) => sum + c.amount, 0);
+    // A credit note reduces what's still owed exactly like a payment
+    // would, without being recorded as one — so an invoice that's been
+    // fully credited (with or without a partial payment already on it)
+    // settles to Paid/zero-balance rather than sitting outstanding
+    // forever with nothing left to actually collect.
+    const newBalance = Math.max(0, i.total - totalCredited - i.amountPaid);
+    const newStatus =
+      newBalance <= 0 ? INVOICE_STATUS.PAID : i.amountPaid > 0 ? INVOICE_STATUS.PARTIALLY_PAID : INVOICE_STATUS.UNPAID;
+    return { ...i, creditNotes, balanceDue: newBalance, status: newStatus };
+  });
   persist(invoices);
   return invoices.find((i) => i.id === id);
 }

@@ -1,0 +1,158 @@
+.reports-controls {
+  margin-bottom: 20px;
+}
+
+.reports-controls-row {
+  display: flex;
+  gap: 14px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.reports-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.reports-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.reports-select,
+.reports-date {
+  height: var(--input-height);
+  padding: 0 14px;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-input);
+  font-size: 14px;
+  font-family: var(--font-family);
+  background: var(--color-white);
+  color: var(--color-text-primary);
+  min-width: 180px;
+}
+
+.reports-date:disabled,
+.reports-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.reports-hint {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin: 12px 0 0;
+}
+
+.reports-error {
+  font-size: 13px;
+  color: var(--color-danger);
+  margin: 12px 0 0;
+}
+
+.reports-output-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.reports-output-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.reports-output-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.reports-print-header {
+  display: none;
+}
+
+.reports-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.reports-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-background);
+}
+
+.reports-summary-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+
+.reports-summary-label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 768px) {
+  .reports-controls-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .reports-select,
+  .reports-date {
+    width: 100%;
+  }
+
+  .reports-output-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* FR-09.3: "Print / PDF" scopes the browser's native print dialog to just
+   the report card — controls and buttons hidden, a printable title/date
+   range shown instead. Same technique as the billing receipt. */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .reports-output,
+  .reports-output * {
+    visibility: visible;
+  }
+
+  .reports-output {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 24px;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .reports-print-header {
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  .reports-print-header p {
+    color: #555;
+    font-size: 12px;
+  }
+}

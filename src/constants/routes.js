@@ -15,6 +15,9 @@ export const ROUTES = {
   BILLING: '/billing',
   INVENTORY: '/inventory',
   STAFF: '/staff',
+  REPORTS: '/reports',
+  SETTINGS: '/settings',
 
+  FORBIDDEN: '/403',
   ROOT: '/',
 };

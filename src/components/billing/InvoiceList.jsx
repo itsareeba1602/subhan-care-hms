@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Plus, Eye, CheckCircle2, ChevronLeft, ChevronRight, AlertTriangle, Receipt, Printer } from 'lucide-react';
+import { Search, Plus, Eye, CheckCircle2, ChevronLeft, ChevronRight, AlertTriangle, Receipt, Printer, FileMinus } from 'lucide-react';
 import Input from '../shared/Input';
 import Button from '../shared/Button';
 import Badge from '../shared/Badge';
@@ -36,11 +36,14 @@ function InvoiceList() {
     setPage,
     generateInvoice,
     markInvoicePaid,
+    issueCreditNote,
   } = useBilling();
 
   const [modal, setModal] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState(PAYMENT_METHODS[0]);
   const [paymentAmount, setPaymentAmount] = useState('');
+  const [creditAmount, setCreditAmount] = useState('');
+  const [creditReason, setCreditReason] = useState('');
   const [busy, setBusy] = useState(false);
   const { showToast } = useToast();
 
@@ -48,6 +51,8 @@ function InvoiceList() {
   const closeModal = () => {
     setModal(null);
     setPaymentAmount('');
+    setCreditAmount('');
+    setCreditReason('');
   };
 
   const handleGenerate = async (data) => {
@@ -72,6 +77,28 @@ function InvoiceList() {
   const openPayModal = (invoice) => {
     setModal({ type: 'pay', invoice });
     setPaymentAmount(String(invoice.balanceDue ?? invoice.total));
+  };
+
+  const openCreditModal = (invoice) => {
+    setModal({ type: 'credit', invoice });
+    const alreadyCredited = (invoice.creditNotes || []).reduce((sum, c) => sum + c.amount, 0);
+    setCreditAmount(String(Math.max(0, invoice.total - alreadyCredited)));
+  };
+
+  // FR-07.4 / IR-02: a finalized invoice can't be deleted or edited — this
+  // is the only correction path, and it stays linked to the original
+  // invoice as a permanent, reasoned record rather than altering it.
+  const handleIssueCredit = async () => {
+    setBusy(true);
+    try {
+      await issueCreditNote(modal.invoice.id, { reason: creditReason, amount: Number(creditAmount) });
+      closeModal();
+      showToast('Credit note issued.');
+    } catch (err) {
+      showToast(err.message || 'Failed to issue credit note.', 'error');
+    } finally {
+      setBusy(false);
+    }
   };
 
   // FR-07.3: "printable/downloadable PDF receipt." Scopes the browser's
@@ -111,6 +138,9 @@ function InvoiceList() {
               <CheckCircle2 size={16} />
             </button>
           )}
+          <button className="invoice-list-action-btn" onClick={() => openCreditModal(i)} title="Issue credit note">
+            <FileMinus size={16} />
+          </button>
         </div>
       ),
     },
@@ -228,6 +258,17 @@ function InvoiceList() {
               <span>Total</span>
               <strong>{formatCurrency(modal.invoice.total)}</strong>
             </div>
+            {modal.invoice.creditNotes?.length > 0 && (
+              <div className="invoice-receipt-credits">
+                <p className="invoice-receipt-credits-title">Credit Notes</p>
+                {modal.invoice.creditNotes.map((c) => (
+                  <div key={c.id} className="invoice-receipt-credit-row">
+                    <span>{c.id} — {c.reason}</span>
+                    <span>-{formatCurrency(c.amount)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
             {modal.invoice.status === 'partially-paid' && (
               <div className="invoice-receipt-balance">
                 <span>Paid: {formatCurrency(modal.invoice.amountPaid)}</span>
@@ -285,6 +326,47 @@ function InvoiceList() {
                 <option key={m} value={m}>{m}</option>
               ))}
             </select>
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        open={modal?.type === 'credit'}
+        onClose={closeModal}
+        title="Issue Credit Note"
+        footer={
+          <>
+            <Button variant="ghost" onClick={closeModal}>Cancel</Button>
+            <Button variant="danger" loading={busy} onClick={handleIssueCredit}>
+              {busy ? 'Issuing...' : 'Issue Credit Note'}
+            </Button>
+          </>
+        }
+      >
+        {modal?.type === 'credit' && (
+          <div className="invoice-list-pay-field">
+            <p className="invoice-list-credit-text">
+              Finalized invoices can't be deleted or edited directly (IR-02). A credit note reduces{' '}
+              <strong>{modal.invoice.id}</strong>'s outstanding balance and stays permanently linked to it for audit purposes — the
+              original invoice total and line items are never changed.
+            </p>
+            <label className="invoice-list-pay-label">Credit Amount</label>
+            <input
+              type="number"
+              min="1"
+              max={modal.invoice.total - (modal.invoice.creditNotes || []).reduce((sum, c) => sum + c.amount, 0)}
+              className="invoice-list-pay-amount"
+              value={creditAmount}
+              onChange={(e) => setCreditAmount(e.target.value)}
+            />
+            <label className="invoice-list-pay-label">Reason</label>
+            <input
+              type="text"
+              className="invoice-list-pay-amount"
+              placeholder="e.g. Billing correction — duplicate lab test charge"
+              value={creditReason}
+              onChange={(e) => setCreditReason(e.target.value)}
+            />
           </div>
         )}
       </Modal>

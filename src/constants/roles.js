@@ -110,6 +110,22 @@ export const ROLE_MODULE_ACCESS = {
     [ROLES.PHARMACIST]: 'F',
     [ROLES.BILLING_STAFF]: '—',
   },
+  // FR-09.1: "The system shall allow an Admin to generate reports..." —
+  // Admin gets full access. Section 9 Table 5 also gives Billing Staff
+  // 'R (financial)' — read-only access scoped to the Revenue report
+  // specifically (see ReportsPage.jsx, which filters the report-type
+  // dropdown to just Revenue for that role rather than exposing
+  // patient/appointment/inventory data they have no access to elsewhere
+  // in the app). Settings has no row here deliberately: it's a personal
+  // account page every authenticated role can reach (see AppRoutes.jsx),
+  // not a module with per-role visibility to enforce.
+  reports: {
+    [ROLES.ADMIN]: 'F',
+    [ROLES.DOCTOR]: '—',
+    [ROLES.RECEPTIONIST]: '—',
+    [ROLES.PHARMACIST]: '—',
+    [ROLES.BILLING_STAFF]: 'R',
+  },
 };
 
 export function hasModuleAccess(role, moduleKey) {

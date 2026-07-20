@@ -1,4 +1,4 @@
-import { Users, Stethoscope, CalendarCheck, Receipt } from 'lucide-react';
+import { Users, Stethoscope, CalendarCheck, Receipt, Package, Pill } from 'lucide-react';
 import Card from '../../components/shared/Card';
 import Spinner from '../../components/shared/Spinner';
 import DoctorScheduleWidget from '../../components/dashboard/DoctorScheduleWidget';
@@ -8,12 +8,14 @@ import { useDoctorSchedule } from '../../hooks/useDoctorSchedule';
 import { ROLE_LABELS, hasModuleAccess } from '../../constants/roles';
 import './DashboardPage.css';
 
+// Kept in sync with ROLE_MODULE_ACCESS (constants/roles.js) — this is only
+// ever a one-line orientation summary, the actual enforcement lives there.
 const ROLE_FOCUS = {
-  admin: 'You have full access across Patients, Doctors, Appointments, and Billing.',
-  doctor: 'You have limited (view-focused) access to Patients and read access to your schedule.',
+  admin: 'You have full access across every module, including Inventory and Prescriptions oversight.',
+  doctor: 'You manage your own appointments and patients\u2019 medical history, and write prescriptions during consultations.',
   receptionist: 'You can manage Patients and Appointments end-to-end.',
-  pharmacist: 'You have read-only access to Patient records for prescription reference.',
-  billing_staff: 'You have full access to Billing. Other modules are outside your role.',
+  pharmacist: 'You dispense prescriptions and have full control over medicine and supply Inventory.',
+  billing_staff: 'You have full access to Billing, with read access to Patient records for invoicing.',
 };
 
 function DashboardPage() {
@@ -59,6 +61,21 @@ function DashboardPage() {
           ? `Rs. ${stats.outstandingAmount.toLocaleString('en-PK')} pending`
           : undefined,
       show: hasModuleAccess(role, 'billing'),
+    },
+    {
+      key: 'prescriptions',
+      icon: Pill,
+      label: 'Pending Prescriptions',
+      value: stats?.pendingPrescriptions,
+      show: role === 'admin' || role === 'pharmacist',
+    },
+    {
+      key: 'inventory',
+      icon: Package,
+      label: 'Inventory Alerts',
+      value: stats?.inventoryAlertCount,
+      sublabel: 'Low stock, out of stock, or expiring soon',
+      show: hasModuleAccess(role, 'inventory'),
     },
   ].filter((c) => c.show);
 

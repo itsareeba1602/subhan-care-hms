@@ -54,6 +54,13 @@ export function useBilling() {
     return updated;
   };
 
+  // FR-07.4 / IR-02: the only correction path for a finalized invoice.
+  const issueCreditNote = async (id, payload) => {
+    const updated = await billingService.issueCreditNote(id, payload);
+    await fetchInvoices();
+    return updated;
+  };
+
   return {
     invoices,
     total,
@@ -73,5 +80,6 @@ export function useBilling() {
     setPage,
     generateInvoice,
     markInvoicePaid,
+    issueCreditNote,
   };
 }

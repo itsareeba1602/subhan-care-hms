@@ -1,12 +1,14 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, Stethoscope, CalendarCheck, Receipt, HeartPulse, UserCog, FileClock, Pill, Package } from 'lucide-react';
+import { LayoutDashboard, Users, Stethoscope, CalendarCheck, Receipt, HeartPulse, UserCog, FileClock, Pill, Package, FileBarChart, Settings } from 'lucide-react';
 import { ROUTES } from '../../constants/routes';
 import { hasModuleAccess } from '../../constants/roles';
 import { useAuth } from '../../hooks/useAuth';
 import './Sidebar.css';
 
 // moduleKey ties each nav item to a row in ROLE_MODULE_ACCESS (SRS Section 9).
-// Items with no moduleKey (Dashboard) are visible to every authenticated role.
+// Items with no moduleKey (Dashboard, Settings) are visible to every
+// authenticated role — Settings is a personal account page, not a
+// per-role module, so it has nothing to gate.
 const NAV_ITEMS = [
   { to: ROUTES.DASHBOARD, label: 'Dashboard', icon: LayoutDashboard },
   { to: ROUTES.PATIENTS, label: 'Patients', icon: Users, moduleKey: 'patients' },
@@ -17,6 +19,8 @@ const NAV_ITEMS = [
   { to: ROUTES.BILLING, label: 'Billing', icon: Receipt, moduleKey: 'billing' },
   { to: ROUTES.INVENTORY, label: 'Inventory', icon: Package, moduleKey: 'inventory' },
   { to: ROUTES.STAFF, label: 'Staff', icon: UserCog, moduleKey: 'staff' },
+  { to: ROUTES.REPORTS, label: 'Reports', icon: FileBarChart, moduleKey: 'reports' },
+  { to: ROUTES.SETTINGS, label: 'Settings', icon: Settings },
 ];
 
 function Sidebar() {

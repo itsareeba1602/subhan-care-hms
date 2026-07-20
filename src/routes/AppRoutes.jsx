@@ -16,7 +16,10 @@ import PrescriptionsPage from '../pages/prescriptions/PrescriptionsPage';
 import BillingPage from '../pages/billing/BillingPage';
 import InventoryPage from '../pages/inventory/InventoryPage';
 import StaffPage from '../pages/staff/StaffPage';
+import ReportsPage from '../pages/reports/ReportsPage';
+import SettingsPage from '../pages/settings/SettingsPage';
 import NotFoundPage from '../pages/NotFoundPage';
+import ForbiddenPage from '../pages/ForbiddenPage';
 
 import ProtectedRoute from './ProtectedRoute';
 import RoleRoute from './RoleRoute';
@@ -61,10 +64,17 @@ function AppRoutes() {
           <Route element={<RoleRoute moduleKey="staff" />}>
             <Route path={ROUTES.STAFF} element={<StaffPage />} />
           </Route>
+          <Route element={<RoleRoute moduleKey="reports" />}>
+            <Route path={ROUTES.REPORTS} element={<ReportsPage />} />
+          </Route>
+          {/* Settings is a personal account page, not a per-role module —
+              every authenticated role reaches it, so no RoleRoute gate. */}
+          <Route path={ROUTES.SETTINGS} element={<SettingsPage />} />
         </Route>
       </Route>
 
       <Route path={ROUTES.ROOT} element={<Navigate to={ROUTES.DASHBOARD} replace />} />
+      <Route path={ROUTES.FORBIDDEN} element={<ForbiddenPage />} />
       {/* Real 404 instead of a silent redirect — a blind catch-all hides
           typos and dead links instead of surfacing them during testing. */}
       <Route path="*" element={<NotFoundPage />} />
